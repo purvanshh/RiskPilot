@@ -1,0 +1,244 @@
+[
+  {
+    "application_id": "APP-001",
+    "applicant_data": {
+      "name": "Alice Johnson",
+      "income": 80000,
+      "monthly_debt": 1200,
+      "loan_amount": 200000,
+      "property_value": 280000,
+      "employment_months": 36
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Alice Johnson, DOB: 12/10/1990",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Alice Johnson",
+          "dob": "12/10/1990"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $6,666. Balance: $12,500. Monthly debt: $1,200.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 6666,
+          "monthly_debt": 1200
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: TechCorp. Pay Period: Monthly. Gross pay: $6,666.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "TechCorp",
+          "income_monthly": 6666
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Employment confirmation: Alice Johnson has been employed at TechCorp for 3 years.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "TechCorp",
+          "employment_months": 36
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 1: Clean Approval. Happy path, unanimous agreement, high confidence."
+  },
+  {
+    "application_id": "APP-002",
+    "applicant_data": {
+      "name": "Bob Smith",
+      "income": 30000,
+      "monthly_debt": 1375,
+      "loan_amount": 250000,
+      "property_value": 270000,
+      "employment_months": 8
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Bob Smith, DOB: 05/04/1985",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Bob Smith",
+          "dob": "05/04/1985"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $2,500. Balance: $1,200. Monthly debt: $1,375.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 2500,
+          "monthly_debt": 1375
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: RetailInc. Gross pay: $2,500.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "employer": "RetailInc",
+          "income_monthly": 2500
+        }
+      }
+    ],
+    "expected_recommendation": "deny",
+    "description": "Test Case 2: Clean Denial. High DTI, short employment history, high loan-to-value ratio."
+  },
+  {
+    "application_id": "APP-003",
+    "applicant_data": {
+      "name": "Charlie Brown",
+      "income": 60000,
+      "monthly_debt": 1750,
+      "loan_amount": 205000,
+      "property_value": 250000,
+      "employment_months": 24
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Charlie Brown",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Charlie Brown"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $5,000. Monthly debt: $1,750.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 5000,
+          "monthly_debt": 1750
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: BuildCorp. Gross pay: $5,000.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "BuildCorp",
+          "income_monthly": 5000
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Employment confirmation: Charlie Brown has been employed for 2 years.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "BuildCorp",
+          "employment_months": 24
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 3: Borderline Disagreement. Credit score borderline, LTV slightly exceeds threshold (82%)."
+  },
+  {
+    "application_id": "APP-004",
+    "applicant_data": {
+      "name": "Diana Prince",
+      "income": 90000,
+      "monthly_debt": 1500,
+      "loan_amount": 300000,
+      "property_value": 400000,
+      "employment_months": 48
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Diana Prince",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Diana Prince"
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: JusticeLeague. Gross pay: $7,500.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "JusticeLeague",
+          "income_monthly": 7500
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 4: Missing Document. Missing bank statement & employment letter."
+  },
+  {
+    "application_id": "APP-005",
+    "applicant_data": {
+      "name": "Evan Wright",
+      "income": 100000,
+      "monthly_debt": 3166,
+      "loan_amount": 237000,
+      "property_value": 300000,
+      "employment_months": 11
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Evan Wright",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Evan Wright"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $8,333. Monthly debt: $3,166.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 8333,
+          "monthly_debt": 3166
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: DesignStudio. Gross pay: $8,333.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "DesignStudio",
+          "income_monthly": 8333
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Employment confirmation: Evan has been employed at DesignStudio for 11 months.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "DesignStudio",
+          "employment_months": 11
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 5: Policy Edge Case. Employment stability is 11 months (<12 months requirement). Arbitrator flag required."
+  }
+]

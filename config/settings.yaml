@@ -1,0 +1,32 @@
+# Loan Underwriter Multi-Agent configuration settings
+app:
+  name: "Loan Approval Multi-Agent Underwriter"
+  version: "1.0.0"
+  debug: true
+
+model:
+  name: "gpt-4o"
+  temperature: 0.0
+
+embeddings:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+
+vector_store:
+  persist_directory: "./data/chroma_db"
+  collection_name: "policy_documents"
+
+kyc:
+  min_required_docs: 3
+  confidence_threshold: 0.7
+
+credit:
+  default_credit_score: 600
+
+policy:
+  min_credit_score: 650
+  max_dti: 0.45
+  max_ltv: 0.80
+  min_employment_months: 12
+
+arbitrator:
+  min_confidence_threshold: 0.6
