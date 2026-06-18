@@ -50,16 +50,48 @@ RiskPilot/
    ```bash
    python -m venv venv
    source venv/bin/activate
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   make install
+   ```
+   Or manually:
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. **Configure environment variables**:
-   Create a `.env` file in the root:
-   ```env
-   OPENAI_API_KEY=your_key_here
-   LANGCHAIN_TRACING_V2=true
-   LANGCHAIN_API_KEY=your_langsmith_key_here
+3. **Configure environment variables**:
+   ```bash
+   cp .env.example .env
    ```
+   Then edit `.env` and fill in your API keys:
+   ```env
+   OPENAI_API_KEY=sk-...
+   LANGCHAIN_API_KEY=lsv2_...
+   LANGCHAIN_PROJECT=loan-underwriter
+   ```
+
+## Quick Start
+
+```bash
+# Run tests
+make test
+
+# Launch officer dashboard
+make run-demo
+```
+
+## Available Commands (Make)
+
+| Target     | Description                                      |
+|------------|--------------------------------------------------|
+| `install`  | Install dependencies + pre-commit hooks          |
+| `test`     | Run pytest with coverage                         |
+| `run-demo` | Launch Streamlit officer dashboard               |
+| `lint`     | Check code style (black, isort, flake8)          |
+| `format`   | Auto-format code (black, isort)                  |
+| `clean`    | Remove cache, coverage, chroma_db artifacts      |
 
 ## Running the Project
 
@@ -70,7 +102,6 @@ streamlit run src/ui/officer_dashboard.py
 
 ## Testing
 
-Run tests with `pytest`:
 ```bash
-pytest
+pytest -v --cov=src --cov-report=term-missing
 ```

@@ -1,0 +1,33 @@
+# Environment
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vector store / data
+data/chroma_db/
+data/embeddings_cache/
+
+# Build outputs
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+langsmith_traces/
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+
+.agents
+skills-lock.json

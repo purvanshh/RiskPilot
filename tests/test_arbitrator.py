@@ -1,19 +1,23 @@
-import pytest
-from src.graph.state import LoanApplicationState, CreditRiskOutput, PolicyCheckOutput
 from src.agents.arbitrator_agent import arbitrator_node
+from src.graph.state import CreditRiskOutput, LoanApplicationState, PolicyCheckOutput
+
 
 def test_arbitrator_unanimous_approval():
     """Tests arbitrator returns APPROVE when all agents align favorably."""
     state = LoanApplicationState(
         application_id="APP-001",
         applicant_data={},
-        kyc_output={"missing_critical_docs": False, "fraud_flag": False, "confidence": 1.0},
+        kyc_output={
+            "missing_critical_docs": False,
+            "fraud_flag": False,
+            "confidence": 1.0,
+        },
         credit_output=CreditRiskOutput(
             credit_score=780,
             risk_category="low",
             dti_ratio=0.20,
             default_probability=0.02,
-            reasoning="Excellent credit"
+            reasoning="Excellent credit",
         ),
         policy_output=PolicyCheckOutput(
             policy_passed=True,
@@ -22,29 +26,34 @@ def test_arbitrator_unanimous_approval():
             min_credit_requirement_met=True,
             max_dti_threshold=0.45,
             retrieved_policy_chunks=[],
-            reasoning="All policies satisfied"
-        )
+            reasoning="All policies satisfied",
+        ),
     )
-    
+
     result = arbitrator_node(state)
     arb_out = result["arbitrator_output"]
-    
+
     assert arb_out.recommendation == "approve"
     assert arb_out.agent_agreement == "unanimous"
     assert arb_out.confidence_score >= 0.90
+
 
 def test_arbitrator_conflict_resolution():
     """Tests arbitrator catches conflicts (e.g. high credit score but policy violations)."""
     state = LoanApplicationState(
         application_id="APP-003",
         applicant_data={},
-        kyc_output={"missing_critical_docs": False, "fraud_flag": False, "confidence": 1.0},
+        kyc_output={
+            "missing_critical_docs": False,
+            "fraud_flag": False,
+            "confidence": 1.0,
+        },
         credit_output=CreditRiskOutput(
             credit_score=710,  # Good credit
             risk_category="low",
             dti_ratio=0.35,
             default_probability=0.08,
-            reasoning="Good credit score"
+            reasoning="Good credit score",
         ),
         policy_output=PolicyCheckOutput(
             policy_passed=False,  # Policy violation (LTV 82% > 80%)
@@ -53,13 +62,13 @@ def test_arbitrator_conflict_resolution():
             min_credit_requirement_met=True,
             max_dti_threshold=0.45,
             retrieved_policy_chunks=[],
-            reasoning="LTV policy violation"
-        )
+            reasoning="LTV policy violation",
+        ),
     )
-    
+
     result = arbitrator_node(state)
     arb_out = result["arbitrator_output"]
-    
+
     assert arb_out.recommendation == "review_required"
     assert arb_out.agent_agreement == "conflict"
     assert any("LTV" in f or "Policy" in f for f in arb_out.risk_flags)

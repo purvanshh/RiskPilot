@@ -1,1 +1,10 @@
-# src.tools package
+# src.tools package — re-exports for convenience
+from src.tools.credit_tools import calculate_credit_score  # noqa: F401
+from src.tools.credit_tools import dti_calculator  # noqa: F401
+from src.tools.credit_tools import risk_classifier  # noqa: F401
+from src.tools.document_tools import extract_fields  # noqa: F401
+from src.tools.document_tools import parse_document  # noqa: F401
+from src.tools.document_tools import validate_fields  # noqa: F401
+from src.tools.policy_tools import ltv_calculator  # noqa: F401
+from src.tools.policy_tools import policy_retriever  # noqa: F401
+from src.tools.policy_tools import policy_validator  # noqa: F401

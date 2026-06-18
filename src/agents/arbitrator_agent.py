@@ -1,8 +1,10 @@
 import logging
-from typing import Dict, Any, List
-from src.graph.state import LoanApplicationState, ArbitratorOutput
+from typing import Any, Dict, List
+
+from src.graph.state import ArbitratorOutput, LoanApplicationState
 
 logger = logging.getLogger(__name__)
+
 
 def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
@@ -11,20 +13,19 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
     evaluates conflicts, and calculates a final recommendation with confidence scoring.
     """
     logger.info(f"Starting arbitration for application {state.application_id}")
-    
+
     error_log = list(state.error_log)
-    
+
     # 1. Gather signals
     kyc_ok = True
-    kyc_conf = 1.0
     kyc_fraud = False
     kyc_missing_docs = False
-    
+
     if state.kyc_output:
-        kyc_ok = not state.kyc_output.get("missing_critical_docs", False) and not state.kyc_output.get("fraud_flag", False)
-        kyc_conf = state.kyc_output.get("confidence", 1.0)
-        kyc_fraud = state.kyc_output.get("fraud_flag", False)
-        kyc_missing_docs = state.kyc_output.get("missing_critical_docs", False)
+        kyc = state.kyc_output
+        kyc_ok = not kyc.get("missing_critical_docs", False) and not kyc.get("fraud_flag", False)
+        kyc_fraud = kyc.get("fraud_flag", False)
+        kyc_missing_docs = kyc.get("missing_critical_docs", False)
 
     credit_score = 600
     credit_risk = "medium"
@@ -54,13 +55,13 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
         recommendation = "review_required"
         agreement = "conflict"
         confidence_score = 0.90
-    
+
     if credit_risk in ["high", "very_high"]:
         risk_flags.append(f"Credit risk category is {credit_risk.upper()} (Score: {credit_score})")
         if recommendation != "review_required":
             recommendation = "deny"
             confidence_score = 0.85
-            
+
     if not policy_passed:
         violations_str = ", ".join(policy_violations)
         risk_flags.append(f"Policy check failed: {violations_str}")
@@ -83,7 +84,7 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
             agreement = "partial"
             confidence_score = 0.70
             risk_flags.append("Borderline credit score (Tier 2)")
-            
+
     # Calculate agreement level
     if recommendation == "approve" and policy_passed and kyc_ok and credit_risk == "low":
         agreement = "unanimous"
@@ -91,18 +92,22 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
     elif recommendation == "deny" and not policy_passed and credit_risk in ["high", "very_high"]:
         agreement = "unanimous"
         confidence_score = 0.95
-    elif agreement != "conflict" and (not policy_passed or not kyc_ok or credit_risk in ["medium", "high"]):
+    elif agreement != "conflict" and (
+        not policy_passed or not kyc_ok or credit_risk in ["medium", "high"]
+    ):
         agreement = "partial"
 
     # Assemble summary
     summary_parts = []
-    summary_parts.append(f"Arbitrator Recommendation: {recommendation.upper()} (Confidence: {confidence_score:.0%}).")
+    summary_parts.append(
+        f"Arbitrator Recommendation: {recommendation.upper()} (Confidence: {confidence_score:.0%})."
+    )
     summary_parts.append(f"Agent Agreement Level: {agreement.upper()}.")
     if risk_flags:
         summary_parts.append(f"Risk Flags: {'; '.join(risk_flags)}.")
     else:
         summary_parts.append("No active risk flags. Clean application profile.")
-        
+
     summary = " ".join(summary_parts)
 
     arbitrator_output = ArbitratorOutput(
@@ -110,10 +115,7 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
         confidence_score=confidence_score,
         agent_agreement=agreement,
         summary=summary,
-        risk_flags=risk_flags
+        risk_flags=risk_flags,
     )
 
-    return {
-        "arbitrator_output": arbitrator_output,
-        "error_log": error_log
-    }
+    return {"arbitrator_output": arbitrator_output, "error_log": error_log}

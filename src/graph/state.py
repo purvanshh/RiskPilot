@@ -1,5 +1,7 @@
-from typing import Optional, List, Literal, Dict, Any
+from typing import Any, Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field
+
 
 class ExtractedDocument(BaseModel):
     document_type: Literal["id_proof", "bank_statement", "pay_slip", "employment_letter"]
@@ -8,12 +10,14 @@ class ExtractedDocument(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     extracted_fields: Dict[str, Any]  # e.g., {"name": "John Doe", "income": 50000}
 
+
 class CreditRiskOutput(BaseModel):
     credit_score: int = Field(ge=300, le=850)
     risk_category: Literal["low", "medium", "high", "very_high"]
     dti_ratio: float = Field(ge=0.0, le=1.0)
     default_probability: float = Field(ge=0.0, le=1.0)
     reasoning: str
+
 
 class PolicyCheckOutput(BaseModel):
     policy_passed: bool
@@ -24,6 +28,7 @@ class PolicyCheckOutput(BaseModel):
     retrieved_policy_chunks: List[str]  # RAG evidence
     reasoning: str
 
+
 class ArbitratorOutput(BaseModel):
     recommendation: Literal["approve", "deny", "review_required"]
     confidence_score: float = Field(ge=0.0, le=1.0)
@@ -31,11 +36,13 @@ class ArbitratorOutput(BaseModel):
     summary: str
     risk_flags: List[str] = []
 
+
 class HumanDecision(BaseModel):
     officer_id: str
     decision: Literal["approve", "deny", "override_approve", "override_deny"]
     override_reason: Optional[str] = None
     timestamp: str
+
 
 class LoanApplicationState(BaseModel):
     application_id: str

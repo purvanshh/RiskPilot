@@ -15,6 +15,10 @@ vector_store:
   persist_directory: "./data/chroma_db"
   collection_name: "policy_documents"
 
+tracing:
+  enabled: true
+  project: "loan-underwriter"
+
 kyc:
   min_required_docs: 3
   confidence_threshold: 0.7

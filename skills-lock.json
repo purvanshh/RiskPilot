@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "cost-mode": {
+      "source": "Sagargupta16/claude-cost-optimizer",
+      "sourceType": "github",
+      "skillPath": "skills/cost-mode/SKILL.md",
+      "computedHash": "d20ba573ec5bd4ddf1ceb8aeddfbca776edeb2193173fb803d01a450ba22a97e"
+    }
+  }
+}
