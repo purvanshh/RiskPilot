@@ -5,6 +5,8 @@ from typing import Any, Dict
 
 import PyPDF2
 
+from src.graph.state import timeout_resilience
+
 # For image handling
 try:
     from PIL import Image
@@ -49,11 +51,13 @@ def parse_image(file_path: str) -> str:
         return f"Simulated OCR text for image: {os.path.basename(file_path)}"
 
 
+@timeout_resilience(30.0)
 def parse_document(file_path_or_content: str) -> str:
     """
     Parses a document (PDF, image, text) and returns its raw text.
     If input is not a file path or the file does not exist, treats it as raw content.
     Enforces maximum size limit (10MB) and file type validation.
+    Decorated with @timeout_resilience(30.0) per Phase 16 spec.
     """
     if not file_path_or_content:
         return ""
@@ -208,10 +212,12 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
     return {"extracted_fields": extracted_fields, "confidence": confidence}
 
 
+@timeout_resilience(30.0)
 def extract_fields(text: str, document_type: str = "id_proof") -> Dict[str, Any]:
     """
     Uses GPT-3.5-turbo (via langchain_openai) to extract structured fields from document text.
     Falls back to a robust rule-based regex extractor if OpenAI API is not available.
+    Decorated with @timeout_resilience(30.0) per Phase 16 spec.
     """
     if not os.getenv("OPENAI_API_KEY"):
         return extract_fields_fallback(text, document_type)

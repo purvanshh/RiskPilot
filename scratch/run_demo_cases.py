@@ -1,4 +1,4 @@
-import json
+import argparse
 import os
 import sys
 
@@ -6,22 +6,25 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.graph.graph import graph  # noqa: E402
-from src.graph.state import ExtractedDocument, LoanApplicationState  # noqa: E402
+from src.tools.data_loader import build_state_from_app, load_test_applications  # noqa: E402
 
 
-def run_demo():
+def run_demo(use_pdf_paths: bool = True):
     print("==================================================")
     print("   RiskPilot Multi-Agent Underwriter Demo Run    ")
     print("==================================================")
+    if use_pdf_paths:
+        print("Mode: PDF parsing (Phase 4 pipeline active)")
+    else:
+        print("Mode: Embedded text (fast / offline)")
+    print()
 
     test_apps_path = os.path.join(os.path.dirname(__file__), "../data/test_applications.json")
     if not os.path.exists(test_apps_path):
         print(f"Error: {test_apps_path} not found.")
         sys.exit(1)
 
-    with open(test_apps_path, "r") as f:
-        applications = json.load(f)
-
+    applications = load_test_applications(test_apps_path)
     print(f"Loaded {len(applications)} test applications.\n")
 
     success_count = 0
@@ -37,23 +40,8 @@ def run_demo():
         print(f"Expected Recommendation: {expected.upper()}")
         print("-" * 50)
 
-        docs_list = []
-        for doc in app.get("documents", []):
-            docs_list.append(
-                ExtractedDocument(
-                    document_type=doc["document_type"],
-                    extracted_text=doc["extracted_text"],
-                    validation_status=doc["validation_status"],
-                    confidence=doc["confidence"],
-                    extracted_fields=doc["extracted_fields"],
-                )
-            )
-
-        initial_state = LoanApplicationState(
-            application_id=app_id,
-            applicant_data=app["applicant_data"],
-            documents=docs_list,
-        )
+        # Build state – resolves PDF paths when use_pdf_paths=True
+        initial_state = build_state_from_app(app, use_pdf_paths=use_pdf_paths)
 
         try:
             final_state = graph.invoke(initial_state)
@@ -126,4 +114,13 @@ def run_demo():
 
 
 if __name__ == "__main__":
-    run_demo()
+    parser = argparse.ArgumentParser(
+        description="RiskPilot demo runner – runs all 6 test applications through the pipeline."
+    )
+    parser.add_argument(
+        "--raw",
+        action="store_true",
+        help="Use embedded text from JSON instead of resolving PDF file paths (faster, offline).",
+    )
+    args = parser.parse_args()
+    run_demo(use_pdf_paths=not args.raw)
