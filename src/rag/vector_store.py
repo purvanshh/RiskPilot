@@ -1,49 +1,71 @@
 import logging
 import os
-
-from src.rag.embeddings import get_embeddings
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
 
 def get_vector_store(
     persist_directory: str = "./data/chroma_db",
-    collection_name: str = "policy_documents",
-):
-    """
-    Initializes ChromaDB vector store.
-    Tries to import chromadb. If missing, prints warnings and returns a mock vector store interface.
-    """
-    embeddings = get_embeddings()
+    collection_name: str = "lending_policy",
+) -> Any:
+    """Initializes or loads a persistent ChromaDB collection."""
     os.makedirs(persist_directory, exist_ok=True)
 
     try:
-        from langchain_community.vectorstores import Chroma
+        import chromadb
+        from chromadb.config import Settings
 
-        logger.info(f"Initializing Chroma vector store at {persist_directory}")
-        return Chroma(
-            collection_name=collection_name,
-            embedding_function=embeddings,
-            persist_directory=persist_directory,
+        logger.info(
+            "Initializing local ChromaDB collection '%s' at %s",
+            collection_name,
+            persist_directory,
         )
-    except Exception as e:
+        client = chromadb.Client(
+            settings=Settings(is_persistent=True, persist_directory=persist_directory)
+        )
+        return client.get_or_create_collection(name=collection_name)
+    except Exception as exc:
         logger.warning(
-            f"Could not initialize Chroma vector store: {str(e)}. Mocking database actions."
+            "ChromaDB initialization failed: %s. Falling back to mock vector store.",
+            exc,
         )
 
-        class MockChroma:
-            def add_texts(self, texts, metadatas=None):
-                logger.info(f"MockChroma: Added {len(texts)} texts to vector store.")
-                return [str(i) for i in range(len(texts))]
+        class MockCollection:
+            def __init__(self):
+                self._ids: List[str] = []
+                self._documents: List[str] = []
+                self._metadatas: List[Dict[str, Any]] = []
 
-            def similarity_search(self, query, k=3):
-                logger.info(f"MockChroma: Searching for query '{query}'")
-                # Fallback to simple policy retriever tool mock logic
-                from langchain_core.documents import Document
+            def add(self, ids, documents=None, metadatas=None, embeddings=None):
+                documents = documents or []
+                metadatas = metadatas or [{}] * len(documents)
+                self._ids.extend(ids)
+                self._documents.extend(documents)
+                self._metadatas.extend(metadatas)
 
-                from src.tools.policy_tools import policy_retriever
+            def query(self, query_embeddings=None, query_texts=None, n_results=10, include=None):
+                if query_texts is None:
+                    query_texts = [""]
+                query_text = query_texts[0].lower()
+                scores = []
+                for idx, document in enumerate(self._documents):
+                    score = sum(1 for token in set(query_text.split()) if token in document.lower())
+                    if score > 0:
+                        scores.append((score, idx))
+                scores.sort(key=lambda item: item[0], reverse=True)
+                selected = [idx for _, idx in scores[:n_results]]
+                return {
+                    "ids": [[self._ids[idx] for idx in selected]],
+                    "documents": [[self._documents[idx] for idx in selected]],
+                    "metadatas": [[self._metadatas[idx] for idx in selected]],
+                    "distances": [[0.0 for _ in selected]],
+                }
 
-                chunks = policy_retriever(query)
-                return [Document(page_content=c, metadata={"source": "mock"}) for c in chunks[:k]]
+            def count(self):
+                return len(self._documents)
 
-        return MockChroma()
+            def persist(self):
+                logger.info("MockCollection persist called.")
+
+        return MockCollection()

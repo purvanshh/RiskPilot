@@ -1,35 +1,50 @@
 import logging
-
-from langchain_core.embeddings import Embeddings
+from typing import Iterable, List
 
 logger = logging.getLogger(__name__)
 
 
-class MockEmbeddings(Embeddings):
-    """
-    Fallback mock embeddings class in case sentence-transformers takes too long to load
-    or is not installed, to keep the boilerplate runnable immediately.
-    """
+class MockEmbeddings:
+    """Fallback embeddings when the real sentence transformer is unavailable."""
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return [[0.1] * 384 for _ in texts]
+        return [[0.0] * 768 for _ in texts]
 
     def embed_query(self, text: str) -> list[float]:
-        return [0.1] * 384
+        return [0.0] * 768
 
 
-def get_embeddings():
-    """
-    Tries to initialize SentenceTransformers embeddings,
-    falling back to MockEmbeddings if initialization fails.
-    """
+class SentenceTransformerEmbeddings:
+    """Wrapper around sentence-transformers for direct local embedding generation."""
+
+    def __init__(self, model_name: str):
+        try:
+            from sentence_transformers import SentenceTransformer
+        except Exception as e:
+            raise RuntimeError(
+                f"sentence-transformers is required for {model_name}: {e}"
+            ) from e
+
+        self.model_name = model_name
+        self.model = SentenceTransformer(model_name)
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        embeddings = self.model.encode(texts, batch_size=32, show_progress_bar=False)
+        return [list(map(float, emb)) for emb in embeddings]
+
+    def embed_query(self, text: str) -> list[float]:
+        embedding = self.model.encode([text], batch_size=1, show_progress_bar=False)[0]
+        return list(map(float, embedding))
+
+
+def get_embeddings(model_name: str = "BAAI/bge-small-en-v1.5") -> object:
+    """Returns an embeddings object for local BGE usage with sensible fallbacks."""
     try:
-        from langchain_community.embeddings import HuggingFaceEmbeddings
-
-        logger.info("Initializing HuggingFaceEmbeddings with all-MiniLM-L6-v2")
-        return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    except Exception as e:
+        logger.info("Initializing sentence-transformers for %s", model_name)
+        return SentenceTransformerEmbeddings(model_name=model_name)
+    except Exception as first_error:
         logger.warning(
-            f"Could not load HuggingFaceEmbeddings: {str(e)}. Using MockEmbeddings fallback."
+            "sentence-transformers initialization failed: %s. Using MockEmbeddings.",
+            first_error,
         )
         return MockEmbeddings()
