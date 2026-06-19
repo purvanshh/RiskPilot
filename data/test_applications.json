@@ -240,5 +240,51 @@
     ],
     "expected_recommendation": "review_required",
     "description": "Test Case 5: Policy Edge Case. Employment stability is 11 months (<12 months requirement). Arbitrator flag required."
+  },
+  {
+    "application_id": "APP-006",
+    "applicant_data": {
+      "name": "Frank Forger",
+      "income": 84000,
+      "monthly_debt": 1500,
+      "loan_amount": 220000,
+      "property_value": 300000,
+      "employment_months": 18
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Frank Forger, DOB: 03/12/1988",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Frank Forger",
+          "dob": "03/12/1988"
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employer: GlobalFinance. Name: Francis Forgett. Pay: $7,000/mo.",
+        "validation_status": "invalid",
+        "confidence": 0.30,
+        "extracted_fields": {
+          "name": "Francis Forgett",
+          "income_monthly": 7000,
+          "employer": "GlobalFinance"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $7,000. Name: F. Forger.",
+        "validation_status": "needs_review",
+        "confidence": 0.55,
+        "extracted_fields": {
+          "income_monthly": 7000
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "fraud_expected": true,
+    "description": "Test Case 6 (Bonus): Fraud Flag. Name mismatch between ID ('Frank Forger') and pay slip ('Francis Forgett'). KYC agent must detect inconsistency and route immediately to human_review, bypassing credit and policy assessment."
   }
 ]

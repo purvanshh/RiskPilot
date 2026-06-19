@@ -17,6 +17,7 @@ def test_arbitrator_unanimous_approval():
             risk_category="low",
             dti_ratio=0.20,
             default_probability=0.02,
+            confidence_score=0.92,
             reasoning="Excellent credit",
         ),
         policy_output=PolicyCheckOutput(
@@ -53,6 +54,7 @@ def test_arbitrator_conflict_resolution():
             risk_category="low",
             dti_ratio=0.35,
             default_probability=0.08,
+            confidence_score=0.88,
             reasoning="Good credit score",
         ),
         policy_output=PolicyCheckOutput(

@@ -18,6 +18,7 @@ def test_policy_checks_passed():
             risk_category="low",
             dti_ratio=0.25,
             default_probability=0.05,
+            confidence_score=0.91,
             reasoning="Low risk profile",
         ),
     )
@@ -48,6 +49,7 @@ def test_policy_checks_failed_dti_and_employment():
             risk_category="very_high",
             dti_ratio=0.55,  # Violation: > 45%
             default_probability=0.80,
+            confidence_score=0.62,
             reasoning="High risk profile",
         ),
     )
