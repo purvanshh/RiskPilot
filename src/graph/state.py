@@ -118,9 +118,7 @@ class LoanApplicationState(SerializableModel):
 
     def stamp(self) -> "LoanApplicationState":
         """Returns a copy of the state with updated_at set to now (UTC)."""
-        return self.model_copy(
-            update={"updated_at": datetime.now(timezone.utc).isoformat()}
-        )
+        return self.model_copy(update={"updated_at": datetime.now(timezone.utc).isoformat()})
 
 
 def validate_state(func):

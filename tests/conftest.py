@@ -12,23 +12,20 @@ without depending on A's document parsing, C's RAG pipeline, or D's arbitrator.
 """
 
 from typing import Any, Dict
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.graph.state import (
     ArbitratorOutput,
-    CreditRiskOutput,
     ExtractedDocument,
-    HumanDecision,
     LoanApplicationState,
     PolicyCheckOutput,
 )
 
-
 # ---------------------------------------------------------------------------
 # Primitive Mock Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_kyc_output() -> Dict[str, Any]:
@@ -161,6 +158,7 @@ def mock_arbitrator_conflict() -> ArbitratorOutput:
 # ---------------------------------------------------------------------------
 # State Factories
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def base_documents() -> list:

@@ -20,19 +20,16 @@ Tests in this file:
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 from src.graph.edges import route_after_kyc
 from src.graph.state import ArbitratorOutput, LoanApplicationState
 from src.guardrails.audit_logger import AuditLogger
 from src.guardrails.output_validation import validate_system_recommendation
 
-
 # ---------------------------------------------------------------------------
 # Test 1: route_after_kyc routes fraud_flag=True to human_review
 # ---------------------------------------------------------------------------
+
 
 def test_fraud_flag_routes_to_human_review(state_fraud_flag):
     """
@@ -43,14 +40,13 @@ def test_fraud_flag_routes_to_human_review(state_fraud_flag):
     assert state_fraud_flag.kyc_output.get("fraud_flag") is True
 
     route = route_after_kyc(state_fraud_flag)
-    assert route == "human_review", (
-        f"Expected 'human_review' for fraud flag, got '{route}'"
-    )
+    assert route == "human_review", f"Expected 'human_review' for fraud flag, got '{route}'"
 
 
 # ---------------------------------------------------------------------------
 # Test 2: route_after_kyc routes missing_critical_docs=True to retry
 # ---------------------------------------------------------------------------
+
 
 def test_missing_docs_routes_to_retry(state_fraud_flag, mock_kyc_output_missing_docs):
     """
@@ -78,6 +74,7 @@ def test_missing_docs_routes_to_retry(state_fraud_flag, mock_kyc_output_missing_
 # Test 3: route_after_kyc routes normal KYC to credit
 # ---------------------------------------------------------------------------
 
+
 def test_normal_kyc_routes_to_credit(mock_kyc_output):
     """Normal KYC (no fraud, no missing docs) should route to 'credit'."""
     state = LoanApplicationState(
@@ -101,6 +98,7 @@ def test_normal_kyc_routes_to_credit(mock_kyc_output):
 # Test 4: route_after_kyc with no KYC output routes to human_review (safety)
 # ---------------------------------------------------------------------------
 
+
 def test_no_kyc_output_routes_to_human_review_for_safety():
     """If kyc_output is None (node failed), route_after_kyc must fail-safe to human_review."""
     state = LoanApplicationState(
@@ -116,6 +114,7 @@ def test_no_kyc_output_routes_to_human_review_for_safety():
 # ---------------------------------------------------------------------------
 # Test 5: state_fraud_flag fixture has correct APP-006 structure
 # ---------------------------------------------------------------------------
+
 
 def test_fraud_flag_state_fixture_structure(state_fraud_flag):
     """Verify the conftest APP-006 fraud state fixture has correct structure."""
@@ -142,6 +141,7 @@ def test_fraud_flag_state_fixture_structure(state_fraud_flag):
 # Test 6: Credit node is never called when fraud is flagged
 # ---------------------------------------------------------------------------
 
+
 def test_credit_node_not_called_on_fraud(state_fraud_flag):
     """
     When fraud_flag=True, routing goes to human_review before credit node.
@@ -149,17 +149,18 @@ def test_credit_node_not_called_on_fraud(state_fraud_flag):
     by asserting route_after_kyc never returns 'credit' for a fraud state.
     """
     route = route_after_kyc(state_fraud_flag)
-    assert route != "credit", \
-        "Credit node must NOT be reached when fraud is flagged"
+    assert route != "credit", "Credit node must NOT be reached when fraud is flagged"
 
     # Also verify the credit_output remains None (credit never ran)
-    assert state_fraud_flag.credit_output is None, \
-        "credit_output must be None when fraud detection routes to human_review"
+    assert (
+        state_fraud_flag.credit_output is None
+    ), "credit_output must be None when fraud detection routes to human_review"
 
 
 # ---------------------------------------------------------------------------
 # Test 7: Audit logger captures fraud flag event
 # ---------------------------------------------------------------------------
+
 
 def test_audit_logger_records_fraud_flag(tmp_path, monkeypatch):
     """
@@ -172,7 +173,8 @@ def test_audit_logger_records_fraud_flag(tmp_path, monkeypatch):
     audit = AuditLogger(application_id="APP-006", trace_id="trace-test-001")
     audit.log_guardrail_flag(
         "output",
-        "Fraud detected: Name mismatch between ID ('Frank Forger') and pay slip ('Francis Forgett').",
+        "Fraud detected: Name mismatch between ID ('Frank Forger') and "
+        "pay slip ('Francis Forgett').",
     )
     audit.log_decision(
         decision="under_review",
@@ -186,6 +188,7 @@ def test_audit_logger_records_fraud_flag(tmp_path, monkeypatch):
     assert len(lines) == 2
 
     import json
+
     fraud_entry = json.loads(lines[0])
     decision_entry = json.loads(lines[1])
 
@@ -200,6 +203,7 @@ def test_audit_logger_records_fraud_flag(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # Test 8: Output guardrail fires for fraud-derived low-confidence arbitrator
 # ---------------------------------------------------------------------------
+
 
 def test_output_guardrail_on_fraud_derived_arbitrator_output():
     """
@@ -229,6 +233,7 @@ def test_output_guardrail_on_fraud_derived_arbitrator_output():
 # Test 9: Test applications JSON contains APP-006 with fraud_expected=True
 # ---------------------------------------------------------------------------
 
+
 def test_test_applications_json_contains_app006():
     """
     Verify test_applications.json has been updated with APP-006 Fraud Flag test case.
@@ -242,8 +247,7 @@ def test_test_applications_json_contains_app006():
     app006 = next((a for a in applications if a["application_id"] == "APP-006"), None)
 
     assert app006 is not None, "APP-006 (Fraud Flag) must be in test_applications.json"
-    assert app006.get("fraud_expected") is True, \
-        "APP-006 must have fraud_expected=True"
+    assert app006.get("fraud_expected") is True, "APP-006 must have fraud_expected=True"
     assert app006["expected_recommendation"] == "review_required"
 
     # Validate document structure — should have at least 3 docs
@@ -257,6 +261,7 @@ def test_test_applications_json_contains_app006():
 # ---------------------------------------------------------------------------
 # Test 10: Fraud name mismatch detection logic (unit test on the signal)
 # ---------------------------------------------------------------------------
+
 
 def test_fraud_name_mismatch_signal():
     """
@@ -282,5 +287,6 @@ def test_fraud_name_mismatch_signal():
     id_doc = next(d for d in app006["documents"] if d["document_type"] == "id_proof")
     slip_doc = next(d for d in app006["documents"] if d["document_type"] == "pay_slip")
 
-    assert id_doc["extracted_fields"]["name"] != slip_doc["extracted_fields"]["name"], \
-        "ID and pay slip names must differ to constitute a fraud signal"
+    assert (
+        id_doc["extracted_fields"]["name"] != slip_doc["extracted_fields"]["name"]
+    ), "ID and pay slip names must differ to constitute a fraud signal"

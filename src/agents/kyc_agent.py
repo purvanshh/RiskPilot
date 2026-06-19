@@ -36,7 +36,7 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
             ]
             for doc in mock_docs:
                 parsed_text = parse_document(doc["text"])
-                fields = extract_fields(parsed_text)
+                fields = extract_fields(parsed_text, doc["type"])
                 is_valid = validate_fields(fields)
 
                 extracted_docs.append(

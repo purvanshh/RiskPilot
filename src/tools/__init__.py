@@ -2,6 +2,7 @@
 from src.tools.credit_tools import calculate_credit_score  # noqa: F401
 from src.tools.credit_tools import dti_calculator  # noqa: F401
 from src.tools.credit_tools import risk_classifier  # noqa: F401
+from src.tools.document_tools import detect_document_type  # noqa: F401
 from src.tools.document_tools import extract_fields  # noqa: F401
 from src.tools.document_tools import parse_document  # noqa: F401
 from src.tools.document_tools import validate_fields  # noqa: F401

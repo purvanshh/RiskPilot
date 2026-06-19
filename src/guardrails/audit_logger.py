@@ -125,6 +125,7 @@ class AuditLogger:
 # Module-level convenience functions (for quick use without instantiating)
 # ---------------------------------------------------------------------------
 
+
 def log_agent_output(application_id: str, agent_name: str, output: Dict[str, Any]) -> None:
     """Convenience wrapper: log a single agent output without an AuditLogger instance."""
     AuditLogger(application_id).log_agent_output(agent_name, output)

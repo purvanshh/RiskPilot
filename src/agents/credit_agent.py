@@ -26,7 +26,9 @@ def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
     - Produce a confidence score reflecting input data quality
     - All outputs stored in CreditRiskOutput for downstream agents
     """
-    logger.info(f"[CreditAgent] Starting credit risk assessment for application {state.application_id}")
+    logger.info(
+        f"[CreditAgent] Starting credit risk assessment for application {state.application_id}"
+    )
 
     error_log = list(state.error_log)
     try:
@@ -81,7 +83,7 @@ def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
             f"DTI ratio: {dti:.2%} — "
             f"{'EXCEEDS 60% hard stop threshold.' if dti > 0.6 else 'within acceptable range.'} "
             f"Employment tenure: {employment_months} months "
-            f"({'stable ≥12 months' if employment_months >= 12 else 'short <12 months, risk factor'}). "
+            f"({'stable ≥12mo' if employment_months >= 12 else 'short <12mo, risk'}). "
             f"Risk classification: {risk_category.upper()}. "
             f"Default probability: {default_prob:.2%}. "
             f"Assessment confidence: {confidence:.2f}."
@@ -90,7 +92,7 @@ def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
         credit_result = CreditRiskOutput(
             credit_score=credit_score,
             risk_category=risk_category,
-            dti_ratio=round(dti, 4),
+            dti_ratio=min(1.0, round(dti, 4)),
             default_probability=default_prob,
             confidence_score=confidence,
             reasoning=reasoning,
@@ -111,7 +113,10 @@ def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
             dti_ratio=1.0,
             default_probability=1.0,
             confidence_score=0.0,
-            reasoning=f"Assessment failed due to error: {str(e)}. Fallback conservative values assigned.",
+            reasoning=(
+                f"Assessment failed due to error: {str(e)}. "
+                "Fallback conservative values assigned."
+            ),
         )
 
     return {"credit_output": credit_result, "error_log": error_log}

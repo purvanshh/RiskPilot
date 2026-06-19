@@ -25,14 +25,13 @@ from src.tools.credit_tools import (
     calculate_confidence_score,
     calculate_credit_score,
     calculate_default_probability,
-    dti_calculator,
     risk_classifier,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_state(income, monthly_debt, employment_months, app_id="APP-TEST", kyc_output=None):
     """Build a minimal valid LoanApplicationState for credit node testing."""
@@ -55,6 +54,7 @@ def _make_state(income, monthly_debt, employment_months, app_id="APP-TEST", kyc_
 # Test 1: Clean Approval — High income, low debt, stable tenure
 # ---------------------------------------------------------------------------
 
+
 def test_clean_approval_low_risk():
     """
     Test Case 1 (APP-001 profile): Alice Johnson
@@ -73,13 +73,14 @@ def test_clean_approval_low_risk():
     assert credit_out.risk_category == "low"
     assert credit_out.dti_ratio == pytest.approx(0.18, abs=0.01)
     assert credit_out.default_probability < 0.15  # high score → low default prob
-    assert credit_out.confidence_score >= 0.8     # all factors present
+    assert credit_out.confidence_score >= 0.8  # all factors present
     assert "low" in credit_out.reasoning.lower() or "LOW" in credit_out.reasoning
 
 
 # ---------------------------------------------------------------------------
 # Test 2: Clean Denial — Low income, high debt, short tenure
 # ---------------------------------------------------------------------------
+
 
 def test_clean_denial_very_high_risk():
     """
@@ -104,6 +105,7 @@ def test_clean_denial_very_high_risk():
 # Test 3: Borderline Case — Medium-to-high risk
 # ---------------------------------------------------------------------------
 
+
 def test_borderline_medium_risk():
     """
     Test Case 3 (APP-003 profile): Charlie Brown
@@ -127,6 +129,7 @@ def test_borderline_medium_risk():
 # Test 4: Edge Case — Zero monthly debt (perfect DTI)
 # ---------------------------------------------------------------------------
 
+
 def test_edge_zero_monthly_debt():
     """Zero debt applicant should have DTI=0 and near-maximum credit score."""
     state = _make_state(income=50000, monthly_debt=0, employment_months=24)
@@ -143,6 +146,7 @@ def test_edge_zero_monthly_debt():
 # Test 5: DTI Hard Stop Guardrail
 # ---------------------------------------------------------------------------
 
+
 def test_dti_hard_stop_guardrail_fires():
     """DTI > 0.6 must trigger the output guardrail hard stop."""
     # income=20000, monthly_debt=2000 → monthly_income=1666.67, dti=1.2 → >0.6
@@ -154,8 +158,9 @@ def test_dti_hard_stop_guardrail_fires():
 
     requires_review, flags = validate_credit_output(credit_out, application_id="TEST-DTI")
     assert requires_review is True
-    assert any("DTI" in f or "hard stop" in f.lower() for f in flags), \
-        f"Expected DTI hard stop flag but got: {flags}"
+    assert any(
+        "DTI" in f or "hard stop" in f.lower() for f in flags
+    ), f"Expected DTI hard stop flag but got: {flags}"
 
 
 def test_dti_below_hard_stop_no_guardrail():
@@ -176,6 +181,7 @@ def test_dti_below_hard_stop_no_guardrail():
 # Test 6: Confidence Score — High quality data
 # ---------------------------------------------------------------------------
 
+
 def test_confidence_score_high_quality_data():
     """Full data set (income>20k, debt≥0, tenure≥12) should yield confidence≥0.8."""
     score = calculate_confidence_score(income=80000, monthly_debt=1200, employment_months=36)
@@ -185,6 +191,7 @@ def test_confidence_score_high_quality_data():
 # ---------------------------------------------------------------------------
 # Test 7: Confidence Score — Short tenure drops confidence below 0.6
 # ---------------------------------------------------------------------------
+
 
 def test_confidence_score_zero_employment():
     """
@@ -210,6 +217,7 @@ def test_confidence_score_partial_tenure():
 # Test 8: Short Employment Tenure Penalises Credit Score
 # ---------------------------------------------------------------------------
 
+
 def test_short_tenure_penalises_score():
     """
     employment_months=3 should score lower than employment_months=36, all else equal.
@@ -219,23 +227,25 @@ def test_short_tenure_penalises_score():
     # Use low income so scores don't cap at 850
     score_short = calculate_credit_score(income=20000, monthly_debt=200, employment_months=3)
     score_long = calculate_credit_score(income=20000, monthly_debt=200, employment_months=36)
-    assert score_short < score_long, \
-        f"Short tenure ({score_short}) should score lower than long tenure ({score_long})"
+    assert score_short < score_long, (
+        f"Short tenure ({score_short}) should score lower than " f"long tenure ({score_long})"
+    )
 
 
 def test_employment_under_12_months_in_agent():
     """
-    employment_months=11 (Test Case 5 pattern) should have <12 months flagged in reasoning.
-    Confidence with income>20k (+0.15) + income>0 (+0.35) + debt>=0 (+0.25) + tenure 6-11 (+0.15) = 0.90
-    The reasoning string must mention the short tenure risk.
+    # Confidence with income>20k (+0.15) + income>0 (+0.35) + debt>=0 (+0.25)
+    # + tenure 6-11 (+0.15) = 0.90
+    # The reasoning string must mention the short tenure risk.
     """
     state = _make_state(income=100000, monthly_debt=3166, employment_months=11)
     result = credit_node(state)
     credit_out = result["credit_output"]
 
     # PRD says <12 months is a risk factor — verify it's noted in reasoning
-    assert "short" in credit_out.reasoning.lower() or "12 months" in credit_out.reasoning, \
-        f"Expected <12 months risk factor in reasoning, got: {credit_out.reasoning[:100]}"
+    assert (
+        "short" in credit_out.reasoning.lower() or "12 months" in credit_out.reasoning
+    ), f"Expected <12 months risk factor in reasoning, got: {credit_out.reasoning[:100]}"
     # Confidence should be below 'full data' (no >=12m bonus, only 6-11m partial)
     assert credit_out.confidence_score < 1.0
 
@@ -243,6 +253,7 @@ def test_employment_under_12_months_in_agent():
 # ---------------------------------------------------------------------------
 # Test 9: State Validation Decorator
 # ---------------------------------------------------------------------------
+
 
 def test_state_decorator_rejects_invalid_state():
     """validate_state decorator should raise ValueError for invalid state dict."""
@@ -260,6 +271,7 @@ def test_state_decorator_rejects_wrong_type():
 # ---------------------------------------------------------------------------
 # Test 10: CreditRiskOutput Schema Validation (with confidence_score field)
 # ---------------------------------------------------------------------------
+
 
 def test_credit_output_schema_complete():
     """CreditRiskOutput must include confidence_score and pass Pydantic validation."""
@@ -298,6 +310,7 @@ def test_credit_output_schema_invalid_confidence():
 # Test 11: KYC-Verified Income Override
 # ---------------------------------------------------------------------------
 
+
 def test_kyc_verified_income_overrides_applicant_data():
     """
     If KYC output contains a higher verified income, the credit node should use it.
@@ -316,18 +329,20 @@ def test_kyc_verified_income_overrides_applicant_data():
     )
     result_kyc = credit_node(state_kyc_override)
 
-    assert result_kyc["credit_output"].credit_score > result_low["credit_output"].credit_score, \
-        "KYC-verified higher income should result in a higher credit score"
+    assert (
+        result_kyc["credit_output"].credit_score > result_low["credit_output"].credit_score
+    ), "KYC-verified higher income should result in a higher credit score"
 
 
 # ---------------------------------------------------------------------------
 # Test 12: Default Probability Bounds
 # ---------------------------------------------------------------------------
 
+
 def test_default_probability_bounded_at_extremes():
     """Default probability must be in [0.0, 1.0] for all valid score inputs."""
-    assert calculate_default_probability(300) == pytest.approx(1.0)   # min score → max prob
-    assert calculate_default_probability(850) == pytest.approx(0.0)   # max score → zero prob
+    assert calculate_default_probability(300) == pytest.approx(1.0)  # min score → max prob
+    assert calculate_default_probability(850) == pytest.approx(0.0)  # max score → zero prob
     assert calculate_default_probability(575) == pytest.approx(0.5, abs=0.01)  # midpoint
 
 
@@ -336,25 +351,32 @@ def test_default_probability_monotone_decreasing():
     scores = [300, 400, 500, 580, 650, 720, 800, 850]
     probs = [calculate_default_probability(s) for s in scores]
     for i in range(len(probs) - 1):
-        assert probs[i] >= probs[i + 1], \
-            f"Default prob not monotone: score {scores[i]}→{probs[i]}, score {scores[i+1]}→{probs[i+1]}"
+        assert probs[i] >= probs[i + 1], (
+            f"Default prob not monotone: score {scores[i]}→{probs[i]}, "
+            f"score {scores[i+1]}→{probs[i+1]}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Test 13: Risk Classifier Thresholds
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("score,expected_risk", [
-    (720, "low"),
-    (719, "medium"),
-    (650, "medium"),
-    (649, "high"),
-    (580, "high"),
-    (579, "very_high"),
-    (300, "very_high"),
-    (850, "low"),
-])
+
+@pytest.mark.parametrize(
+    "score,expected_risk",
+    [
+        (720, "low"),
+        (719, "medium"),
+        (650, "medium"),
+        (649, "high"),
+        (580, "high"),
+        (579, "very_high"),
+        (300, "very_high"),
+        (850, "low"),
+    ],
+)
 def test_risk_classifier_thresholds(score, expected_risk):
     """All PRD risk category boundary values are correctly classified."""
-    assert risk_classifier(score) == expected_risk, \
-        f"Score {score} should be '{expected_risk}', got '{risk_classifier(score)}'"
+    assert (
+        risk_classifier(score) == expected_risk
+    ), f"Score {score} should be '{expected_risk}', got '{risk_classifier(score)}'"

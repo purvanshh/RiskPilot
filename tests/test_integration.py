@@ -12,23 +12,17 @@ Strategy:
 All 5 PRD test case profiles are covered.
 """
 
-from unittest.mock import patch
 
 import pytest
 
 from src.agents.credit_agent import credit_node
-from src.graph.state import (
-    ArbitratorOutput,
-    CreditRiskOutput,
-    LoanApplicationState,
-    PolicyCheckOutput,
-)
+from src.graph.state import CreditRiskOutput, LoanApplicationState
 from src.guardrails.output_validation import validate_credit_output, validate_system_recommendation
-
 
 # ---------------------------------------------------------------------------
 # Helper: Run only the credit node against a state fixture
 # ---------------------------------------------------------------------------
+
 
 def run_credit_only(state: LoanApplicationState) -> CreditRiskOutput:
     """Invoke just the credit node (no graph overhead) and return the output."""
@@ -39,6 +33,7 @@ def run_credit_only(state: LoanApplicationState) -> CreditRiskOutput:
 # ---------------------------------------------------------------------------
 # Test 1: Clean Approval — credit output for APP-001 profile
 # ---------------------------------------------------------------------------
+
 
 def test_integration_clean_approval_credit(state_clean_approval):
     """
@@ -66,6 +61,7 @@ def test_integration_clean_approval_credit(state_clean_approval):
 # Test 2: Clean Denial — credit output for APP-002 profile
 # ---------------------------------------------------------------------------
 
+
 def test_integration_clean_denial_credit(state_clean_denial):
     """
     Integration: APP-002 (Bob — 30k income, 1375 debt, 8 months)
@@ -90,6 +86,7 @@ def test_integration_clean_denial_credit(state_clean_denial):
 # Test 3: Borderline — credit output for APP-003 profile
 # ---------------------------------------------------------------------------
 
+
 def test_integration_borderline_credit(state_borderline):
     """
     Integration: APP-003 (Charlie — 60k income, 1750 debt, 24 months)
@@ -109,6 +106,7 @@ def test_integration_borderline_credit(state_borderline):
 # Test 4: Policy Edge Case — APP-005 profile (11 months employment)
 # ---------------------------------------------------------------------------
 
+
 def test_integration_policy_edge_credit(state_policy_edge_case):
     """
     Integration: APP-005 (Evan — 100k income, 3166 debt, 11 months)
@@ -127,6 +125,7 @@ def test_integration_policy_edge_credit(state_policy_edge_case):
 # ---------------------------------------------------------------------------
 # Test 5: Guardrail integration — low confidence triggers review
 # ---------------------------------------------------------------------------
+
 
 def test_integration_low_confidence_triggers_review():
     """
@@ -150,6 +149,7 @@ def test_integration_low_confidence_triggers_review():
 # ---------------------------------------------------------------------------
 # Test 6: Guardrail integration — system recommendation cross-check
 # ---------------------------------------------------------------------------
+
 
 def test_integration_system_recommendation_with_dti_hard_stop(mock_arbitrator_approve):
     """
@@ -197,13 +197,16 @@ def test_integration_system_recommendation_hitl_always_fires(mock_arbitrator_app
     """
     _, flags = validate_system_recommendation(mock_arbitrator_approve)
 
-    hitl_flags = [f for f in flags if "Human-in-the-Loop" in f or "HITL" in f or "officer" in f.lower()]
+    hitl_flags = [
+        f for f in flags if "Human-in-the-Loop" in f or "HITL" in f or "officer" in f.lower()
+    ]
     assert len(hitl_flags) > 0, "Mandatory HITL flag must always be present"
 
 
 # ---------------------------------------------------------------------------
 # Test 7: Full graph integration — credit agent emits correct output keys
 # ---------------------------------------------------------------------------
+
 
 def test_integration_credit_output_all_fields_present(state_clean_approval):
     """
@@ -235,6 +238,7 @@ def test_integration_credit_output_all_fields_present(state_clean_approval):
 # Test 8: State schema roundtrip through credit node
 # ---------------------------------------------------------------------------
 
+
 def test_integration_state_schema_roundtrip(state_clean_approval):
     """
     Running credit_node must produce a state update that, when merged,
@@ -254,12 +258,16 @@ def test_integration_state_schema_roundtrip(state_clean_approval):
 # Parametrised integration: all 4 test case profiles through credit node
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("income,monthly_debt,employment_months,expected_risk", [
-    (80000, 1200, 36, "low"),      # APP-001: clean approval
-    (30000, 1375, 8,  "very_high"),  # APP-002: clean denial
-    (90000, 1500, 48, "low"),      # APP-004: Diana Prince (high income)
-    (100000, 3166, 11, "low"),     # APP-005: Evan Wright (policy edge — credit still ok)
-])
+
+@pytest.mark.parametrize(
+    "income,monthly_debt,employment_months,expected_risk",
+    [
+        (80000, 1200, 36, "low"),  # APP-001: clean approval
+        (30000, 1375, 8, "very_high"),  # APP-002: clean denial
+        (90000, 1500, 48, "low"),  # APP-004: Diana Prince (high income)
+        (100000, 3166, 11, "low"),  # APP-005: Evan Wright (policy edge — credit still ok)
+    ],
+)
 def test_parametrised_credit_risk_levels(income, monthly_debt, employment_months, expected_risk):
     """
     Parametrised test verifying all PRD test case profiles produce the expected risk category.
@@ -274,5 +282,6 @@ def test_parametrised_credit_risk_levels(income, monthly_debt, employment_months
     credit_out = run_credit_only(state)
     assert credit_out.risk_category == expected_risk, (
         f"Expected risk={expected_risk} for income={income}, debt={monthly_debt}, "
-        f"tenure={employment_months}, got: {credit_out.risk_category} (score={credit_out.credit_score})"
+        f"tenure={employment_months}, got: {credit_out.risk_category} "
+        f"(score={credit_out.credit_score})"
     )
