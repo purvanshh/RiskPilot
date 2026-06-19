@@ -1,12 +1,13 @@
 import logging
 from typing import Any, Dict, List
 
-from src.graph.state import ExtractedDocument, LoanApplicationState
+from src.graph.state import ExtractedDocument, LoanApplicationState, validate_state
 from src.tools.document_tools import extract_fields, parse_document, validate_fields
 
 logger = logging.getLogger(__name__)
 
 
+@validate_state
 def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     KYC / Document Agent Node

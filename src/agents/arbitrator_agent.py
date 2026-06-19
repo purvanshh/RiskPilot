@@ -1,11 +1,12 @@
 import logging
 from typing import Any, Dict, List
 
-from src.graph.state import ArbitratorOutput, LoanApplicationState
+from src.graph.state import ArbitratorOutput, LoanApplicationState, validate_state
 
 logger = logging.getLogger(__name__)
 
 
+@validate_state
 def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Arbitrator Agent Node

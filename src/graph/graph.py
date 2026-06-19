@@ -8,11 +8,12 @@ from src.agents.credit_agent import credit_node
 from src.agents.kyc_agent import kyc_node
 from src.agents.policy_agent import policy_node
 from src.graph.edges import route_after_arbitrator, route_after_kyc
-from src.graph.state import LoanApplicationState
+from src.graph.state import LoanApplicationState, validate_state
 
 logger = logging.getLogger(__name__)
 
 
+@validate_state
 def retry_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Retry node triggered when documents are missing.
@@ -25,6 +26,7 @@ def retry_node(state: LoanApplicationState) -> Dict[str, Any]:
     return {"final_status": "under_review", "error_log": error_log}
 
 
+@validate_state
 def human_review_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Human Review node.

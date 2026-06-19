@@ -1,12 +1,13 @@
 import logging
 from typing import Any, Dict
 
-from src.graph.state import CreditRiskOutput, LoanApplicationState
+from src.graph.state import CreditRiskOutput, LoanApplicationState, validate_state
 from src.tools.credit_tools import calculate_credit_score, dti_calculator, risk_classifier
 
 logger = logging.getLogger(__name__)
 
 
+@validate_state
 def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Credit Risk Agent Node
