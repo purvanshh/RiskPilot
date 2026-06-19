@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Dict, List, Literal, Optional
 
@@ -11,12 +12,26 @@ class SerializableModel(BaseModel):
             return self.model_dump()
         return self.dict()
 
+    def state_to_dict(self) -> Dict[str, Any]:
+        """Explicit alias of to_dict() for PRD compliance and audit trail exports."""
+        return self.to_dict()
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
         """Deserializes and validates a model from a dictionary."""
         if hasattr(cls, "model_validate"):
             return cls.model_validate(data)
         return cls.parse_obj(data)
+
+    @classmethod
+    def validate_state_dict(cls, data: Dict[str, Any]) -> bool:
+        """
+        Validates a raw dictionary against this model's schema.
+        Returns True if valid, raises ValidationError if not.
+        Useful in tests and guardrails without constructing a full object.
+        """
+        cls.from_dict(data)
+        return True
 
 
 class ExtractedDocument(SerializableModel):
@@ -32,6 +47,11 @@ class CreditRiskOutput(SerializableModel):
     risk_category: Literal["low", "medium", "high", "very_high"]
     dti_ratio: float = Field(ge=0.0, le=1.0)
     default_probability: float = Field(ge=0.0, le=1.0)
+    confidence_score: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Confidence in the credit assessment (0-1). <0.6 triggers human review.",
+    )
     reasoning: str
 
 
@@ -61,23 +81,54 @@ class HumanDecision(SerializableModel):
 
 
 class LoanApplicationState(SerializableModel):
-    application_id: str
+    # --- Required Identity Fields ---
+    application_id: str = Field(description="Unique identifier for the loan application.")
+    trace_id: Optional[str] = Field(
+        default=None,
+        description="LangSmith / observability trace ID for end-to-end run tracking.",
+    )
+
+    # --- Applicant & Document Data ---
     applicant_data: Dict[str, Any]
     documents: List[ExtractedDocument] = []
+
+    # --- Agent Outputs (populated sequentially by each node) ---
     kyc_output: Optional[Dict[str, Any]] = None
     credit_output: Optional[CreditRiskOutput] = None
     policy_output: Optional[PolicyCheckOutput] = None
     arbitrator_output: Optional[ArbitratorOutput] = None
+
+    # --- Decision Fields ---
     human_decision: Optional[HumanDecision] = None
     final_status: Optional[Literal["approved", "denied", "under_review"]] = None
-    error_log: List[str] = []
-    trace_id: Optional[str] = None
-    state_version: str = Field(default="1.0.0")
+
+    # --- Audit & Metadata ---
+    error_log: List[str] = Field(
+        default_factory=list,
+        description="Captures errors and warnings from every agent node.",
+    )
+    state_version: str = Field(
+        default="1.0.0",
+        description="Schema version for forward-compatibility checks.",
+    )
+    updated_at: Optional[str] = Field(
+        default=None,
+        description="ISO-8601 timestamp of the last state mutation, used in audit logs.",
+    )
+
+    def stamp(self) -> "LoanApplicationState":
+        """Returns a copy of the state with updated_at set to now (UTC)."""
+        return self.model_copy(
+            update={"updated_at": datetime.now(timezone.utc).isoformat()}
+        )
 
 
 def validate_state(func):
     """
     Decorator for agent nodes to validate state against the schema.
+    - Accepts both dict and LoanApplicationState inputs.
+    - Validates output dict can be merged back into a valid state.
+    - Stamps updated_at on every successful node execution.
     """
 
     @wraps(func)
@@ -106,6 +157,8 @@ def validate_state(func):
             # Check schema validation after applying the updates
             merged_dict = validated_state.to_dict()
             merged_dict.update(result)
+            # Stamp updated_at on every validated output
+            merged_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
             LoanApplicationState.from_dict(merged_dict)
         except Exception as e:
             raise ValueError(
