@@ -2,13 +2,21 @@ import logging
 import os
 from typing import Any, Dict, List
 
-from src.graph.state import ExtractedDocument, LoanApplicationState, validate_state
+from src.graph.state import (
+    ExtractedDocument,
+    LoanApplicationState,
+    graceful_fallback,
+    timeout_resilience,
+    validate_state,
+)
 from src.tools.document_tools import extract_fields, parse_document
 
 logger = logging.getLogger(__name__)
 
 
 @validate_state
+@graceful_fallback("kyc")
+@timeout_resilience(30.0)
 def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     KYC / Document Agent Node

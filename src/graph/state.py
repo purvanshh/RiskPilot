@@ -1,8 +1,12 @@
+import concurrent.futures
+import logging
 from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class SerializableModel(BaseModel):
@@ -166,3 +170,110 @@ def validate_state(func):
         return result
 
     return wrapper
+
+
+def timeout_resilience(seconds: float = 30.0):
+    """
+    Decorator to enforce a timeout on node execution.
+    Raises TimeoutError if execution takes longer than specified seconds.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(func, *args, **kwargs)
+                try:
+                    return future.result(timeout=seconds)
+                except concurrent.futures.TimeoutError as e:
+                    raise TimeoutError(
+                        f"Agent node '{func.__name__}' timed out after {seconds} seconds."
+                    ) from e
+
+        return wrapper
+
+    return decorator
+
+
+def graceful_fallback(fallback_type: str):
+    """
+    Decorator to catch any exceptions (including TimeoutError) during node execution,
+    log the error to state.error_log, and return a conservative fallback update dictionary.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(state: Any, *args, **kwargs):
+            error_log = list(state.error_log) if hasattr(state, "error_log") else []
+            try:
+                return func(state, *args, **kwargs)
+            except Exception as e:
+                # Propagate validation errors meant to halt ingestion
+                if isinstance(e, ValueError) and (
+                    "Validation Error" in str(e) or "No documents" in str(e)
+                ):
+                    raise e
+
+                logger.error(f"Error in node {func.__name__}: {str(e)}", exc_info=True)
+                error_log.append(f"Node '{func.__name__}' error: {str(e)}")
+
+                if fallback_type == "kyc":
+                    kyc_output = {
+                        "status": "failed",
+                        "missing_critical_docs": True,
+                        "missing_docs_list": ["id_proof", "bank_statement", "pay_slip"],
+                        "fraud_flag": False,
+                        "confidence": 0.0,
+                        "verified_fields": {
+                            "name": (
+                                state.applicant_data.get("name") if state.applicant_data else None
+                            ),
+                            "income": (
+                                state.applicant_data.get("income") if state.applicant_data else None
+                            ),
+                            "employer": None,
+                        },
+                    }
+                    return {
+                        "kyc_output": kyc_output,
+                        "error_log": error_log,
+                    }
+                elif fallback_type == "credit":
+                    credit_result = CreditRiskOutput(
+                        credit_score=300,
+                        risk_category="very_high",
+                        dti_ratio=1.0,
+                        default_probability=1.0,
+                        confidence_score=0.0,
+                        reasoning=(
+                            f"Assessment failed due to error: {str(e)}. "
+                            "Fallback values assigned."
+                        ),
+                    )
+                    return {"credit_output": credit_result, "error_log": error_log}
+                elif fallback_type == "policy":
+                    policy_result = PolicyCheckOutput(
+                        policy_passed=False,
+                        violations=[f"System error in policy checking: {str(e)}"],
+                        ltv_ratio=0.0,
+                        min_credit_requirement_met=False,
+                        max_dti_threshold=0.45,
+                        retrieved_policy_chunks=[],
+                        reasoning=f"System error: {str(e)}",
+                    )
+                    return {"policy_output": policy_result, "error_log": error_log}
+                elif fallback_type == "arbitrator":
+                    arbitrator_output = ArbitratorOutput(
+                        recommendation="review_required",
+                        confidence_score=0.0,
+                        agent_agreement="conflict",
+                        summary=f"Arbitration failed due to system error: {str(e)}",
+                        risk_flags=[f"System error in arbitration: {str(e)}"],
+                    )
+                    return {"arbitrator_output": arbitrator_output, "error_log": error_log}
+                else:
+                    return {"error_log": error_log}
+
+        return wrapper
+
+    return decorator

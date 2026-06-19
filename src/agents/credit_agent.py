@@ -1,7 +1,13 @@
 import logging
 from typing import Any, Dict
 
-from src.graph.state import CreditRiskOutput, LoanApplicationState, validate_state
+from src.graph.state import (
+    CreditRiskOutput,
+    LoanApplicationState,
+    graceful_fallback,
+    timeout_resilience,
+    validate_state,
+)
 from src.tools.credit_tools import (
     calculate_confidence_score,
     calculate_credit_score,
@@ -14,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 @validate_state
+@graceful_fallback("credit")
+@timeout_resilience(30.0)
 def credit_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Credit Risk Agent Node.

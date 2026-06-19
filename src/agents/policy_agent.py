@@ -1,13 +1,21 @@
 import logging
 from typing import Any, Dict, List
 
-from src.graph.state import LoanApplicationState, PolicyCheckOutput, validate_state
+from src.graph.state import (
+    LoanApplicationState,
+    PolicyCheckOutput,
+    graceful_fallback,
+    timeout_resilience,
+    validate_state,
+)
 from src.tools.policy_tools import ltv_calculator, policy_retriever, policy_validator
 
 logger = logging.getLogger(__name__)
 
 
 @validate_state
+@graceful_fallback("policy")
+@timeout_resilience(30.0)
 def policy_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Policy / Eligibility Agent Node
