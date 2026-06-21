@@ -2,6 +2,12 @@ import logging
 import os
 from typing import Any, Dict, List
 
+# ChromaDB 1.5.x ships pb2 stubs generated for protobuf < 4, but the venv has
+# protobuf 7. Force pure-Python protobuf parsing so Chroma's telemetry/OTLP
+# imports don't fail with "Descriptors cannot be created directly".
+# Must be set BEFORE chromadb is imported anywhere in the process.
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +30,14 @@ def get_vector_store(
         client = chromadb.Client(
             settings=Settings(is_persistent=True, persist_directory=persist_directory)
         )
-        return client.get_or_create_collection(name=collection_name)
+        # Cosine distance so 1 - distance is a true cosine similarity in [0, 1].
+        # This gives the 0.5 similarity_threshold consistent semantics across
+        # all policy domains (without it, Chroma defaults to L2 and threshold
+        # comparisons depend on chunk length / embedding norm).
+        return client.get_or_create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"},
+        )
     except Exception as exc:
         logger.warning(
             "ChromaDB initialization failed: %s. Falling back to mock vector store.",

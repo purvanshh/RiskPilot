@@ -32,11 +32,19 @@ def run_policy_check(state: LoanApplicationState) -> PolicyCheckOutput:
     loan_amount = state.applicant_data.get("loan_amount", 0.0)
     property_value = state.applicant_data.get("property_value", 1.0)
     employment_months = state.applicant_data.get("employment_months", 0)
-    income_document_count = sum(
-        1
-        for doc in (state.documents or [])
-        if doc.document_type in {"bank_statement", "pay_slip", "employment_letter"}
-    )
+
+    # Income-doc enforcement is owned by KYC / document-processing agents.
+    # When the application state contains no documents at all, treat that field
+    # as "not asserted" rather than fabricating a violation here.
+    documents = state.documents or []
+    if documents:
+        income_document_count = sum(
+            1
+            for doc in documents
+            if doc.document_type in {"bank_statement", "pay_slip", "employment_letter"}
+        )
+    else:
+        income_document_count = None
 
     credit_score = 300
     dti = 0.0

@@ -63,6 +63,21 @@ class PolicyCheckOutput(SerializableModel):
     max_dti_threshold: float
     retrieved_policy_chunks: List[str]  # RAG evidence
     reasoning: str
+    # --- Grounded-explanation fields (added Phase 2, backwards-compatible) ---
+    retrieved_sources: List[str] = Field(
+        default_factory=list,
+        description="Distinct source documents that contributed retrieved chunks.",
+    )
+    citations: List[str] = Field(
+        default_factory=list,
+        description="Per-chunk citation strings of the form 'Document | Section | chunk N'.",
+    )
+    confidence: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Policy-agent confidence in the grounded evaluation (0–1).",
+    )
 
 
 class ArbitratorOutput(SerializableModel):

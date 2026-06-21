@@ -21,9 +21,7 @@ class SentenceTransformerEmbeddings:
         try:
             from sentence_transformers import SentenceTransformer
         except Exception as e:
-            raise RuntimeError(
-                f"sentence-transformers is required for {model_name}: {e}"
-            ) from e
+            raise RuntimeError(f"sentence-transformers is required for {model_name}: {e}") from e
 
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
@@ -37,8 +35,12 @@ class SentenceTransformerEmbeddings:
         return list(map(float, embedding))
 
 
-def get_embeddings(model_name: str = "BAAI/bge-small-en-v1.5") -> object:
-    """Returns an embeddings object for local BGE usage with sensible fallbacks."""
+def get_embedding_provider(model_name: str = "BAAI/bge-small-en-v1.5") -> object:
+    """Returns an embedding provider object exposing embed_documents/embed_query.
+
+    Falls back to MockEmbeddings if sentence-transformers cannot be loaded.
+    This is the single canonical entry point for embeddings across the RAG subsystem.
+    """
     try:
         logger.info("Initializing sentence-transformers for %s", model_name)
         return SentenceTransformerEmbeddings(model_name=model_name)

@@ -103,6 +103,16 @@ def main():
             "Gross pay: $2,500",
         ],
     )
+    generate_pdf(
+        "data/synthetic_docs/APP-002-employment_letter.pdf",
+        "Employment Verification Letter",
+        [
+            "To Whom It May Concern,",
+            "Employment confirmation: Bob Smith has been employed at RetailInc for 8 months.",
+            "Position: Sales Associate",
+            "Status: Full-time",
+        ],
+    )
 
     # 3. Charlie Brown (APP-003)
     generate_pdf(
@@ -139,6 +149,27 @@ def main():
         "data/synthetic_docs/APP-004-pay_slip.pdf",
         "Pay Slip",
         ["Employee Name: Diana Prince", "Employer: JusticeLeague", "Gross pay: $7,500"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-004-bank_statement.pdf",
+        "Bank Account Statement",
+        [
+            "Account Holder: Diana Prince",
+            "Statement Period: May 2026",
+            "Monthly deposit: $7,500",
+            "Balance: $42,800",
+            "Monthly debt: $1,800",
+        ],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-004-employment_letter.pdf",
+        "Employment Verification Letter",
+        [
+            "To Whom It May Concern,",
+            "Employment confirmation: Diana Prince has been employed at JusticeLeague for 5 years.",
+            "Position: Senior Operations Lead",
+            "Status: Full-time",
+        ],
     )
 
     # 5. Evan Wright (APP-005)
@@ -178,6 +209,20 @@ def main():
         "data/synthetic_docs/APP-006-bank_statement.pdf",
         "Bank Account Statement",
         ["Account Holder: F. Forger", "Monthly deposit: $7,000"],
+    )
+    # Fraud case: the employment letter intentionally carries the third
+    # spelling variant ("Frankie Forger") so KYC name-match fails across all
+    # four documents (ID: Frank Forger / Pay: Francis Forgett / Bank: F. Forger
+    # / Letter: Frankie Forger). Tenure stated as 18 months matches state.
+    generate_pdf(
+        "data/synthetic_docs/APP-006-employment_letter.pdf",
+        "Employment Verification Letter",
+        [
+            "To Whom It May Concern,",
+            "Employment confirmation: Frankie Forger has been employed at GlobalFinance for 18 months.",
+            "Position: Financial Analyst",
+            "Status: Full-time",
+        ],
     )
 
 
