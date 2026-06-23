@@ -1,11 +1,18 @@
 import json
 import os
+import sys
 from datetime import datetime
 
-import streamlit as st
+# Add project root to sys.path to resolve 'src' imports
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
-from src.graph.graph import graph
-from src.graph.state import ExtractedDocument, HumanDecision, LoanApplicationState
+import streamlit as st  # noqa: E402
+
+from src.graph.graph import graph  # noqa: E402
+from src.graph.state import ExtractedDocument, HumanDecision, LoanApplicationState  # noqa: E402
 
 st.set_page_config(
     page_title="Loan Underwriter Officer Dashboard",
