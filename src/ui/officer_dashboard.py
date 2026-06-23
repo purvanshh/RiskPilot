@@ -266,9 +266,7 @@ if selected_app:
 
                 officer_id = st.text_input("Officer ID / Signature:", value="OFFICER-2026-009")
 
-                submit = st.form_submit_state = st.form_submit_button(
-                    "Submit Binding Underwriter Decision"
-                )
+                submit = st.form_submit_button("Submit Binding Underwriter Decision")
 
                 if submit:
                     if (
