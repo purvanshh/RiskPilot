@@ -10,6 +10,7 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+.claude/
 
 # Vector store / data
 data/chroma_db/
