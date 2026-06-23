@@ -215,7 +215,7 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
 @timeout_resilience(30.0)
 def extract_fields(text: str, document_type: str = "id_proof") -> Dict[str, Any]:
     """
-    Uses GPT-3.5-turbo (via langchain_openai) to extract structured fields from document text.
+    Uses GPT-4o-mini (via langchain_openai) to extract structured fields from document text.
     Falls back to a robust rule-based regex extractor if OpenAI API is not available.
     Decorated with @timeout_resilience(30.0) per Phase 16 spec.
     """
@@ -225,7 +225,7 @@ def extract_fields(text: str, document_type: str = "id_proof") -> Dict[str, Any]
     try:
         from langchain_openai import ChatOpenAI
 
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.0)
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
         prompt = (
             "You are an expert loan document parser. Given the following text "
             f"extracted from a document of type '{document_type}', extract the "

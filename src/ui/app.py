@@ -64,13 +64,16 @@ def get_applications():
 @app.route("/api/underwrite/<app_id>", methods=["POST"])
 def underwrite_application(app_id):
     try:
+        data = request.json or {}
+        fast_mode = data.get("fast_mode", False)
+
         apps = load_test_applications(TEST_DATA_PATH)
         app_data = next((a for a in apps if a.get("application_id") == app_id), None)
         if not app_data:
             return jsonify({"error": f"Application {app_id} not found"}), 404
 
         # Build initial state from test data (resolves synthetic PDF paths if present)
-        initial_state = build_state_from_app(app_data, use_pdf_paths=True)
+        initial_state = build_state_from_app(app_data, use_pdf_paths=not fast_mode)
 
         # Run graph
         final_state_dict = graph.invoke(initial_state)
@@ -88,6 +91,7 @@ def submit_decision(app_id):
         officer_id = data.get("officer_id", "OFFICER-01")
         decision = data.get("decision")
         override_reason = data.get("override_reason")
+        fast_mode = data.get("fast_mode", False)
 
         if not decision:
             return jsonify({"error": "decision is required"}), 400
@@ -97,7 +101,7 @@ def submit_decision(app_id):
         if not app_data:
             return jsonify({"error": f"Application {app_id} not found"}), 404
 
-        initial_state = build_state_from_app(app_data, use_pdf_paths=True)
+        initial_state = build_state_from_app(app_data, use_pdf_paths=not fast_mode)
 
         # Inject decision
         import datetime

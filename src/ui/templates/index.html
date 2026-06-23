@@ -80,6 +80,10 @@
             </div>
         </div>
         <div class="flex items-center space-x-4">
+            <label class="flex items-center space-x-2 cursor-pointer bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300">
+                <input type="checkbox" id="fast-mode-toggle" checked class="form-checkbox h-3.5 w-3.5 text-brand-primary rounded bg-brand-bg border-brand-border focus:ring-0">
+                <span>Fast Offline Demo (Instant)</span>
+            </label>
             <div class="flex items-center space-x-2 text-xs bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg">
                 <span class="h-2 w-2 rounded-full bg-brand-success animate-pulse"></span>
                 <span class="text-slate-300 font-mono-custom">LangSmith Observability Tracing Active</span>
@@ -397,11 +401,20 @@
 
     <script>
         let currentApp = null;
+        let appStatuses = {}; // Track live demo status: 'new', 'under_review', 'approved', 'denied'
 
         async function fetchApplications() {
             try {
                 const response = await fetch('/api/applications');
                 const apps = await response.json();
+                
+                // Initialize statuses if not set
+                apps.forEach(app => {
+                    if (!appStatuses[app.application_id]) {
+                        appStatuses[app.application_id] = 'new';
+                    }
+                });
+
                 renderApplications(apps);
             } catch (err) {
                 console.error("Error loading apps list:", err);
@@ -413,9 +426,21 @@
             listContainer.innerHTML = '';
             apps.forEach(app => {
                 const isSelected = currentApp && currentApp.application_id === app.application_id;
-                const expectedColor = app.expected_recommendation === 'approve' ? 'text-brand-success' 
-                                      : app.expected_recommendation === 'deny' ? 'text-brand-danger' 
-                                      : 'text-brand-warning';
+                const status = appStatuses[app.application_id] || 'new';
+                
+                let statusLabel = 'REVIEW PENDING';
+                let statusColor = 'text-slate-400';
+                
+                if (status === 'approved') {
+                    statusLabel = 'APPROVED';
+                    statusColor = 'text-brand-success';
+                } else if (status === 'denied') {
+                    statusLabel = 'DENIED';
+                    statusColor = 'text-brand-danger';
+                } else if (status === 'under_review') {
+                    statusLabel = 'REVIEW';
+                    statusColor = 'text-brand-warning';
+                }
                                       
                 const card = document.createElement('div');
                 card.className = `glass-card p-3 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card' : ''}`;
@@ -426,7 +451,7 @@
                         <div class="text-[10px] text-slate-400 font-mono-custom mt-0.5">${app.application_id}</div>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold uppercase ${expectedColor}">${app.expected_recommendation}</span>
+                        <span class="text-[10px] font-bold uppercase ${statusColor}">${statusLabel}</span>
                     </div>
                 `;
                 listContainer.appendChild(card);
@@ -446,10 +471,6 @@
             const details = document.getElementById('application-details');
             details.classList.remove('hidden');
 
-            // Hide previous results
-            document.getElementById('pipeline-results').classList.add('hidden');
-            document.getElementById('final-status-container').classList.add('hidden');
-
             // Set simple fields
             document.getElementById('app-name').innerText = app.applicant_data.name;
             document.getElementById('app-id').innerText = app.application_id;
@@ -462,8 +483,8 @@
             document.getElementById('detail-loan').innerText = `$${app.applicant_data.loan_amount.toLocaleString()}`;
             document.getElementById('detail-employment').innerText = `${app.applicant_data.employment_months} months`;
 
-            // Reset node indicators
-            resetNodes();
+            // Reset UI states, fields, nodes, and hidden containers
+            resetCurrentProfile();
         }
 
         function resetNodes() {
@@ -498,18 +519,29 @@
             resetNodes();
             document.getElementById('pipeline-results').classList.add('hidden');
 
+            const fastMode = document.getElementById('fast-mode-toggle').checked;
+            const delay = fastMode ? 50 : 300;
+
             const steps = ['kyc', 'credit', 'policy', 'arbitrator'];
             
             // Visual delay simulation to show agent-by-agent processing
             for (let i = 0; i < steps.length; i++) {
                 setNodeState(steps[i], 'active');
-                await new Promise(r => setTimeout(r, 600));
+                await new Promise(r => setTimeout(r, delay));
             }
 
             try {
-                const response = await fetch(`/api/underwrite/${currentApp.application_id}`, { method: 'POST' });
+                const response = await fetch(`/api/underwrite/${currentApp.application_id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fast_mode: fastMode })
+                });
                 const result = await response.json();
                 renderResults(result);
+
+                // Set dynamic status to under_review and re-fetch sidebar
+                appStatuses[currentApp.application_id] = 'under_review';
+                fetchApplications();
             } catch (err) {
                 console.error("Error invoking underwrite pipeline:", err);
                 resetNodes();
@@ -655,6 +687,7 @@
             const officerId = document.getElementById('officer-id').value.trim();
             const decision = document.getElementById('officer-decision').value;
             const overrideReason = document.getElementById('officer-reason').value.trim();
+            const fastMode = document.getElementById('fast-mode-toggle').checked;
 
             if (!officerId) {
                 alert("Please provide an Officer ID");
@@ -668,7 +701,8 @@
                     body: JSON.stringify({
                         officer_id: officerId,
                         decision: decision,
-                        override_reason: overrideReason
+                        override_reason: overrideReason,
+                        fast_mode: fastMode
                     })
                 });
                 const result = await response.json();
@@ -679,18 +713,24 @@
                 finalStatusContainer.classList.remove('hidden');
                 
                 if (result.final_status === 'approved') {
+                    appStatuses[currentApp.application_id] = 'approved';
                     finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-success";
                     finalStatusVal.innerText = "APPROVED";
                     setNodeState('decision', 'passed');
                 } else if (result.final_status === 'denied') {
+                    appStatuses[currentApp.application_id] = 'denied';
                     finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
                     finalStatusVal.innerText = "DENIED";
                     setNodeState('decision', 'failed');
                 } else {
+                    appStatuses[currentApp.application_id] = 'under_review';
                     finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
                     finalStatusVal.innerText = "UNDER MANUAL REVIEW";
                     setNodeState('decision', 'active');
                 }
+
+                // Re-render apps list to show updated status live in the sidebar!
+                fetchApplications();
                 
                 // Smooth scroll to final status
                 finalStatusContainer.scrollIntoView({ behavior: 'smooth' });
@@ -717,6 +757,45 @@
             } else {
                 document.getElementById('officer-decision').value = 'override_approve';
             }
+
+            // Clear results text fields to prevent stale flashing
+            document.getElementById('kyc-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('kyc-badge').innerText = 'Pending';
+            document.getElementById('kyc-name').innerText = '---';
+            document.getElementById('kyc-income').innerText = '---';
+            document.getElementById('kyc-employer').innerText = '---';
+            document.getElementById('kyc-confidence').innerText = '---';
+            document.getElementById('kyc-fraud-alert').classList.add('hidden');
+            
+            document.getElementById('credit-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('credit-badge').innerText = 'Pending';
+            document.getElementById('credit-score').innerText = '---';
+            document.getElementById('credit-default').innerText = '---';
+            document.getElementById('credit-dti').innerText = '---';
+            document.getElementById('credit-confidence').innerText = '---';
+            document.getElementById('credit-reason').innerText = '---';
+            
+            document.getElementById('policy-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('policy-badge').innerText = 'Pending';
+            document.getElementById('policy-ltv').innerText = '---';
+            document.getElementById('policy-max-dti').innerText = '---';
+            document.getElementById('policy-violations-container').classList.add('hidden');
+            document.getElementById('policy-violations-list').innerHTML = '';
+            document.getElementById('policy-chunks').innerHTML = '';
+            
+            document.getElementById('arbitrator-badge').className = 'text-sm px-3.5 py-1.5 rounded-full font-bold uppercase';
+            document.getElementById('arbitrator-badge').innerText = 'Pending';
+            document.getElementById('arbitrator-agreement').innerText = '---';
+            document.getElementById('arbitrator-summary').innerText = '---';
+            document.getElementById('arbitrator-confidence').innerText = '---';
+            document.getElementById('arbitrator-flags-container').classList.add('hidden');
+            document.getElementById('arbitrator-flags-list').innerHTML = '';
+
+            document.getElementById('final-status-value').innerText = '---';
+
+            // Reset dynamic status in sidebar and re-render
+            appStatuses[currentApp.application_id] = 'new';
+            fetchApplications();
         }
 
         // Init

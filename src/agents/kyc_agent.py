@@ -34,12 +34,14 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
         )
 
     # Process and parse documents if they are file paths, otherwise use them directly
-    extracted_docs: List[ExtractedDocument] = []
-    for doc in state.documents:
+    import concurrent.futures
+
+    def _process_single_doc(doc):
         text = doc.extracted_text
         fields = doc.extracted_fields
         confidence = doc.confidence
         status = doc.validation_status
+        err_msg = None
 
         # If text is an existing file path, parse it and extract fields
         if text and isinstance(text, str) and os.path.exists(text):
@@ -52,7 +54,7 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
                 status = "valid"
             except Exception as e:
                 logger.error(f"Error parsing document file {text}: {str(e)}")
-                error_log.append(f"KYC Agent parsing error for {doc.document_type}: {str(e)}")
+                err_msg = f"KYC Agent parsing error for {doc.document_type}: {str(e)}"
                 status = "invalid"
                 confidence = 0.0
                 fields = {}
@@ -62,15 +64,25 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
         if confidence < 0.7:
             status = "needs_review"
 
-        extracted_docs.append(
+        return (
             ExtractedDocument(
                 document_type=doc.document_type,
                 extracted_text=text,
                 validation_status=status,
                 confidence=confidence,
                 extracted_fields=fields,
-            )
+            ),
+            err_msg,
         )
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(_process_single_doc, state.documents))
+
+    extracted_docs: List[ExtractedDocument] = []
+    for doc_obj, err in results:
+        if err:
+            error_log.append(err)
+        extracted_docs.append(doc_obj)
 
     # Task 5.3: Check presence of at least ID, pay slip, bank statement
     doc_types = {d.document_type for d in extracted_docs}

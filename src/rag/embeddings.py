@@ -34,11 +34,19 @@ class SentenceTransformerEmbeddings:
         return list(map(float, embedding))
 
 
+_EMBEDDINGS_CACHE = {}
+
+
 def get_embeddings(model_name: str = "BAAI/bge-small-en-v1.5") -> object:
     """Returns an embeddings object for local BGE usage with sensible fallbacks."""
+    if model_name in _EMBEDDINGS_CACHE:
+        return _EMBEDDINGS_CACHE[model_name]
+
     try:
         logger.info("Initializing sentence-transformers for %s", model_name)
-        return SentenceTransformerEmbeddings(model_name=model_name)
+        embedder = SentenceTransformerEmbeddings(model_name=model_name)
+        _EMBEDDINGS_CACHE[model_name] = embedder
+        return embedder
     except Exception as first_error:
         logger.warning(
             "sentence-transformers initialization failed: %s. Using MockEmbeddings.",
