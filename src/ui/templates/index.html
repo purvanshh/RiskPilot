@@ -151,10 +151,16 @@
                 <div class="bg-brand-card/45 border border-brand-border p-5 rounded-xl space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="font-headline font-semibold text-white">Orchestrated Agent Process Pipeline</h3>
-                        <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
-                            <span class="material-symbols-outlined text-sm">play_arrow</span>
-                            <span>Run Multi-Agent Assessment</span>
-                        </button>
+                        <div class="flex space-x-2">
+                            <button id="reset-btn" onclick="resetCurrentProfile()" class="flex items-center space-x-2 bg-brand-card hover:bg-slate-800 text-slate-300 border border-brand-border font-medium text-sm px-4 py-2 rounded-lg transition">
+                                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                                <span>Reset Profile</span>
+                            </button>
+                            <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
+                                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                <span>Run Multi-Agent Assessment</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Visual Nodes -->
@@ -690,6 +696,26 @@
                 finalStatusContainer.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
                 console.error("Error submitting manual decision:", err);
+            }
+        }
+
+        function resetCurrentProfile() {
+            if (!currentApp) return;
+            resetNodes();
+            document.getElementById('pipeline-results').classList.add('hidden');
+            document.getElementById('final-status-container').classList.add('hidden');
+            
+            // Reset decision form inputs
+            document.getElementById('officer-id').value = 'OFFICER-01';
+            document.getElementById('officer-reason').value = '';
+            
+            // Reset decision select dropdown based on default / recommendation
+            if (currentApp.expected_recommendation === 'approve') {
+                document.getElementById('officer-decision').value = 'approve';
+            } else if (currentApp.expected_recommendation === 'deny') {
+                document.getElementById('officer-decision').value = 'deny';
+            } else {
+                document.getElementById('officer-decision').value = 'override_approve';
             }
         }
 
