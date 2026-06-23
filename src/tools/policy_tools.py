@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from src.rag.vector_store import get_vector_store
+from src.rag.embeddings import get_embedding_provider
 from src.rag.policy_loader import load_and_index_policies
+from src.rag.vector_store import get_vector_store
 
 
 def ltv_calculator(loan_amount: float, property_value: float) -> float:
@@ -51,21 +52,35 @@ def policy_retriever(
 ) -> List[RetrievedPolicyChunk]:
     """Retrieves nearest policy chunks from ChromaDB for the given query."""
     db = _ensure_collection(policy_docs_dir, persist_dir, collection_name)
+    embedder = get_embedding_provider()
 
-    raw_results = []
     try:
-        raw_results = db.similarity_search(query, k=top_k)
+        query_embedding = embedder.embed_query(query)
+        raw_results = db.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+            include=["documents", "metadatas", "distances"],
+        )
     except Exception as e:
         raise RuntimeError(f"Policy retriever failed: {e}") from e
 
+    documents = raw_results.get("documents", [[]])[0]
+    metadatas = raw_results.get("metadatas", [[]])[0]
+    distances = raw_results.get("distances", [[]])[0]
+
     results: List[RetrievedPolicyChunk] = []
-    for document in raw_results:
-        metadata = getattr(document, "metadata", {}) or {}
-        score = float(metadata.get("score", 1.0)) if metadata.get("score") is not None else 1.0
+    for idx, text in enumerate(documents):
+        metadata = metadatas[idx] if idx < len(metadatas) else {}
+        raw_distance = distances[idx] if idx < len(distances) else None
+        # Convert L2 distance to a [0,1] similarity score
+        try:
+            d = float(raw_distance) if raw_distance is not None else 0.0
+            score = 1.0 - d if 0.0 <= d <= 1.0 else 1.0 / (1.0 + d)
+        except (TypeError, ValueError):
+            score = 1.0
         if score < similarity_threshold:
             continue
-        text = getattr(document, "page_content", str(document))
-        results.append(RetrievedPolicyChunk(text=text, metadata=metadata, score=score))
+        results.append(RetrievedPolicyChunk(text=text, metadata=metadata or {}, score=score))
 
     return results
 

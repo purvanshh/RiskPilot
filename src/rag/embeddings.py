@@ -1,5 +1,4 @@
 import logging
-from typing import Iterable, List
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +20,7 @@ class SentenceTransformerEmbeddings:
         try:
             from sentence_transformers import SentenceTransformer
         except Exception as e:
-            raise RuntimeError(
-                f"sentence-transformers is required for {model_name}: {e}"
-            ) from e
+            raise RuntimeError(f"sentence-transformers is required for {model_name}: {e}") from e
 
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
@@ -48,3 +45,7 @@ def get_embeddings(model_name: str = "BAAI/bge-small-en-v1.5") -> object:
             first_error,
         )
         return MockEmbeddings()
+
+
+# Backward-compatible alias (policy_loader.py uses the pre-rename name)
+get_embedding_provider = get_embeddings
