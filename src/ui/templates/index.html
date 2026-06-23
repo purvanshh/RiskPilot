@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>RiskPilot | Multi-Agent Underwriter</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-headline {
+            font-family: 'Hanken Grotesk', sans-serif;
+        }
+        .font-mono-custom {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-card {
+            background: rgba(23, 31, 51, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glass-card:hover {
+            border-color: rgba(85, 141, 255, 0.25);
+        }
+        .active-card {
+            background: rgba(85, 141, 255, 0.08);
+            border-color: rgba(85, 141, 255, 0.4) !important;
+        }
+        .decision-panel {
+            border: 1px solid rgba(85, 141, 255, 0.3);
+            background: linear-gradient(180deg, rgba(85, 141, 255, 0.04) 0%, rgba(11, 19, 38, 0) 100%);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1326;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222a3d;
+            border-radius: 10px;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: "#0b1326",
+                            card: "#171f33",
+                            border: "#2d3449",
+                            text: "#dae2fd",
+                            primary: "#558dff",
+                            success: "#4edea3",
+                            warning: "#ffb95f",
+                            danger: "#ffb4ab"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-brand-border bg-brand-bg/85 sticky top-0 z-50 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <span class="material-symbols-outlined text-brand-primary text-3xl">shield_with_heart</span>
+            <div>
+                <h1 class="text-xl font-headline font-bold tracking-tight text-white">RiskPilot Underwriter</h1>
+                <p class="text-xs text-slate-400">Autonomous Multi-Agent Loan Risk Assessment System</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 text-xs bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg">
+                <span class="h-2 w-2 rounded-full bg-brand-success animate-pulse"></span>
+                <span class="text-slate-300 font-mono-custom">LangSmith Observability Tracing Active</span>
+            </div>
+            <div class="text-xs text-slate-400 font-mono-custom">v1.2.0</div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden h-[calc(100vh-73px)]">
+
+        <!-- Sidebar / Applications List -->
+        <section class="w-80 border-r border-brand-border bg-brand-bg/50 flex flex-col overflow-y-auto shrink-0 p-4">
+            <div class="mb-4">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Loan Applications</h2>
+                <p class="text-xs text-slate-500">Select an application profile below:</p>
+            </div>
+
+            <div id="applications-list" class="space-y-3 flex-1">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- Main Display / Pipeline View -->
+        <section class="flex-1 flex flex-col overflow-y-auto p-6 bg-brand-bg/20">
+            <div id="welcome-message" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                <span class="material-symbols-outlined text-brand-primary text-7xl mb-4 animate-bounce">account_balance</span>
+                <h2 class="text-2xl font-headline font-bold text-white mb-2">Select a Loan Application</h2>
+                <p class="text-slate-400 max-w-md">Choose a profile from the sidebar to inspect extracted documents, simulate the multi-agent underwriting decision flow, and process approvals.</p>
+            </div>
+
+            <div id="application-details" class="hidden space-y-6">
+                <!-- Profile Header -->
+                <div class="flex justify-between items-start bg-brand-card/35 border border-brand-border p-5 rounded-xl">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-1">
+                            <h2 id="app-name" class="text-2xl font-headline font-bold text-white">---</h2>
+                            <span id="app-id" class="font-mono-custom text-xs bg-brand-border px-2 py-0.5 rounded text-brand-primary">---</span>
+                        </div>
+                        <p id="app-desc" class="text-sm text-slate-400">---</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Expected Recommendation</div>
+                        <div id="expected-recommendation" class="text-lg font-headline font-bold uppercase text-brand-primary">---</div>
+                    </div>
+                </div>
+
+                <!-- Core Details Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
+                        <div class="text-xs text-slate-400 mb-1">Annual Income</div>
+                        <div id="detail-income" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    </div>
+                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
+                        <div class="text-xs text-slate-400 mb-1">Monthly Debt</div>
+                        <div id="detail-debt" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    </div>
+                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
+                        <div class="text-xs text-slate-400 mb-1">Loan Requested</div>
+                        <div id="detail-loan" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    </div>
+                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
+                        <div class="text-xs text-slate-400 mb-1">Employment Stability</div>
+                        <div id="detail-employment" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Status Viz -->
+                <div class="bg-brand-card/45 border border-brand-border p-5 rounded-xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-headline font-semibold text-white">Orchestrated Agent Process Pipeline</h3>
+                        <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
+                            <span class="material-symbols-outlined text-sm">play_arrow</span>
+                            <span>Run Multi-Agent Assessment</span>
+                        </button>
+                    </div>
+
+                    <!-- Visual Nodes -->
+                    <div class="grid grid-cols-5 gap-3 pt-2 relative">
+                        <!-- Node 1: Ingestion & KYC -->
+                        <div id="node-kyc" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">description</span>
+                            <div class="text-xs font-semibold text-white">KYC Agent</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Parser & Identity</div>
+                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                        </div>
+                        <!-- Node 2: Credit Score -->
+                        <div id="node-credit" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">monitoring</span>
+                            <div class="text-xs font-semibold text-white">Credit Agent</div>
+                            <div class="text-[10px] text-slate-400 mt-1">DTI & Scoring</div>
+                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                        </div>
+                        <!-- Node 3: Policy Check -->
+                        <div id="node-policy" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">gavel</span>
+                            <div class="text-xs font-semibold text-white">Policy Agent</div>
+                            <div class="text-[10px] text-slate-400 mt-1">RAG Compliance</div>
+                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                        </div>
+                        <!-- Node 4: Arbitrator -->
+                        <div id="node-arbitrator" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">balance</span>
+                            <div class="text-xs font-semibold text-white">Arbitrator</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Weighted Vote</div>
+                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                        </div>
+                        <!-- Node 5: Officer decision -->
+                        <div id="node-decision" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">assignment_ind</span>
+                            <div class="text-xs font-semibold text-white">HITL Review</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Manual Override</div>
+                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Cards (KYC, Credit, Policy, Arbitrator) -->
+                <div id="pipeline-results" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- KYC Agent Result -->
+                        <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                                    <span class="material-symbols-outlined text-brand-primary text-xl">verified_user</span>
+                                    <span>KYC assessment</span>
+                                </h4>
+                                <span id="kyc-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Verified Name</div>
+                                    <div id="kyc-name" class="font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Verified Annual Income</div>
+                                    <div id="kyc-income" class="font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Verified Employer</div>
+                                    <div id="kyc-employer" class="font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Agent Confidence</div>
+                                    <div id="kyc-confidence" class="font-semibold text-white mt-1">---</div>
+                                </div>
+                            </div>
+                            <div id="kyc-fraud-alert" class="hidden p-3 rounded-lg border border-brand-danger bg-brand-danger/10 text-brand-danger text-xs flex items-center space-x-2">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                <span class="font-semibold">Inconsistency/Fraud Alert Triggered</span>
+                            </div>
+                        </div>
+
+                        <!-- Credit Risk Agent Result -->
+                        <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                                    <span class="material-symbols-outlined text-brand-primary text-xl">analytics</span>
+                                    <span>Credit Risk scoring</span>
+                                </h4>
+                                <span id="credit-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Computed Credit Score</div>
+                                    <div id="credit-score" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Default Probability</div>
+                                    <div id="credit-default" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Final DTI Ratio</div>
+                                    <div id="credit-dti" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                </div>
+                                <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                    <div class="text-xs text-slate-400">Scoring Confidence</div>
+                                    <div id="credit-confidence" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                                <span class="font-semibold">Reasoning: </span><span id="credit-reason">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Policy compliance & RAG documents -->
+                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                                <span class="material-symbols-outlined text-brand-primary text-xl">library_books</span>
+                                <span>Policy compliance check</span>
+                            </h4>
+                            <span id="policy-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                <div class="text-xs text-slate-400">LTV (Loan-to-Value)</div>
+                                <div id="policy-ltv" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                            </div>
+                            <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                <div class="text-xs text-slate-400">LTV Limit Checked</div>
+                                <div class="font-semibold text-white mt-1">80% (Max Exception 85%)</div>
+                            </div>
+                            <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                <div class="text-xs text-slate-400">Max DTI Rule</div>
+                                <div id="policy-max-dti" class="font-semibold text-white mt-1">---</div>
+                            </div>
+                        </div>
+
+                        <!-- Violations List -->
+                        <div id="policy-violations-container" class="hidden space-y-2">
+                            <div class="text-xs font-semibold text-brand-danger">Underwriting Violations Detected:</div>
+                            <ul id="policy-violations-list" class="list-disc pl-5 text-sm text-brand-danger/95 space-y-1">
+                                <!-- Dynamically populated -->
+                            </ul>
+                        </div>
+
+                        <!-- RAG Retrieved Chunks -->
+                        <div class="space-y-2">
+                            <div class="text-xs font-semibold text-slate-400">RAG Retrieved Policy Reference Evidence:</div>
+                            <div id="policy-chunks" class="space-y-2 max-h-48 overflow-y-auto">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arbitrator Summary -->
+                    <div class="bg-brand-card p-5 rounded-xl border-2 border-brand-primary/45 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                                <span class="material-symbols-outlined text-brand-primary text-xl">balance</span>
+                                <span>Arbitrator Recommendation Decision</span>
+                            </h4>
+                            <div class="flex items-center space-x-3">
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400">Agreement Level</div>
+                                    <div id="arbitrator-agreement" class="text-xs font-semibold text-white">---</div>
+                                </div>
+                                <span id="arbitrator-badge" class="text-sm px-3.5 py-1.5 rounded-full font-bold uppercase">Pending</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                            <div class="bg-brand-bg/40 p-3 rounded-lg col-span-3">
+                                <div class="text-xs text-slate-400">Confidence Weighted Summary</div>
+                                <p id="arbitrator-summary" class="text-white mt-1 text-sm">---</p>
+                            </div>
+                            <div class="bg-brand-bg/40 p-3 rounded-lg">
+                                <div class="text-xs text-slate-400">Decision Confidence</div>
+                                <div id="arbitrator-confidence" class="font-mono-custom text-xl font-bold text-white mt-1">---</div>
+                            </div>
+                        </div>
+
+                        <div id="arbitrator-flags-container" class="hidden p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-brand-warning text-xs space-y-1">
+                            <div class="font-semibold flex items-center space-x-1">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                <span>Active Underwriter Risk Flags:</span>
+                            </div>
+                            <ul id="arbitrator-flags-list" class="list-disc pl-5 space-y-1">
+                                <!-- Dynamically populated -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Officer Decision Panel -->
+                    <div id="decision-panel" class="decision-panel p-5 rounded-xl border space-y-4">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">assignment_turned_in</span>
+                            <span>Lending Officer Manual Decision (HITL)</span>
+                        </h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Officer ID</label>
+                                <input type="text" id="officer-id" value="OFFICER-01" class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"/>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Decision</label>
+                                <select id="officer-decision" class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0">
+                                    <option value="approve">Approve Recommendation</option>
+                                    <option value="deny">Deny Recommendation</option>
+                                    <option value="override_approve">Override Approve (Force Exception)</option>
+                                    <option value="override_deny">Override Deny (Reject Manually)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button id="submit-decision-btn" onclick="submitDecision()" class="w-full bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm py-2 rounded-lg transition">
+                                    Submit Final Decision
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Override / Decision Justification Notes</label>
+                            <textarea id="officer-reason" rows="2" placeholder="Describe rationale or policy exception justification..." class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Final Output Status -->
+                    <div id="final-status-container" class="hidden p-5 rounded-xl border border-brand-success bg-brand-success/5 text-center space-y-2">
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Final Underwritten Application Status</div>
+                        <div id="final-status-value" class="text-3xl font-headline font-bold uppercase text-brand-success">---</div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+    <script>
+        let currentApp = null;
+
+        async function fetchApplications() {
+            try {
+                const response = await fetch('/api/applications');
+                const apps = await response.json();
+                renderApplications(apps);
+            } catch (err) {
+                console.error("Error loading apps list:", err);
+            }
+        }
+
+        function renderApplications(apps) {
+            const listContainer = document.getElementById('applications-list');
+            listContainer.innerHTML = '';
+            apps.forEach(app => {
+                const isSelected = currentApp && currentApp.application_id === app.application_id;
+                const expectedColor = app.expected_recommendation === 'approve' ? 'text-brand-success' 
+                                      : app.expected_recommendation === 'deny' ? 'text-brand-danger' 
+                                      : 'text-brand-warning';
+                                      
+                const card = document.createElement('div');
+                card.className = `glass-card p-3 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card' : ''}`;
+                card.onclick = () => selectApplication(app);
+                card.innerHTML = `
+                    <div>
+                        <div class="text-sm font-semibold text-white">${app.applicant_data.name}</div>
+                        <div class="text-[10px] text-slate-400 font-mono-custom mt-0.5">${app.application_id}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold uppercase ${expectedColor}">${app.expected_recommendation}</span>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function selectApplication(app) {
+            currentApp = app;
+            
+            // Re-render apps list to show active card styling
+            fetchApplications();
+
+            // Hide welcome
+            document.getElementById('welcome-message').classList.add('hidden');
+            
+            // Show details
+            const details = document.getElementById('application-details');
+            details.classList.remove('hidden');
+
+            // Hide previous results
+            document.getElementById('pipeline-results').classList.add('hidden');
+            document.getElementById('final-status-container').classList.add('hidden');
+
+            // Set simple fields
+            document.getElementById('app-name').innerText = app.applicant_data.name;
+            document.getElementById('app-id').innerText = app.application_id;
+            document.getElementById('app-desc').innerText = app.description || '';
+            document.getElementById('expected-recommendation').innerText = app.expected_recommendation;
+
+            // Details
+            document.getElementById('detail-income').innerText = `$${app.applicant_data.income.toLocaleString()}`;
+            document.getElementById('detail-debt').innerText = `$${app.applicant_data.monthly_debt.toLocaleString()}`;
+            document.getElementById('detail-loan').innerText = `$${app.applicant_data.loan_amount.toLocaleString()}`;
+            document.getElementById('detail-employment').innerText = `${app.applicant_data.employment_months} months`;
+
+            // Reset node indicators
+            resetNodes();
+        }
+
+        function resetNodes() {
+            const nodes = ['kyc', 'credit', 'policy', 'arbitrator', 'decision'];
+            nodes.forEach(node => {
+                const el = document.getElementById(`node-${node}`);
+                el.className = "border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
+                el.querySelector('.node-status').innerText = 'IDLE';
+                el.querySelector('.node-status').className = 'node-status text-[10px] font-semibold text-slate-500 mt-2';
+            });
+        }
+
+        function setNodeState(node, state) {
+            const el = document.getElementById(`node-${node}`);
+            if (state === 'active') {
+                el.className = "border-2 border-brand-primary bg-brand-card/80 p-4 rounded-lg flex flex-col items-center text-center scale-105 transition duration-300 shadow-lg shadow-blue-500/10";
+                el.querySelector('.node-status').innerText = 'PROCESSING...';
+                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-primary mt-2 animate-pulse';
+            } else if (state === 'passed') {
+                el.className = "border border-brand-success bg-brand-success/5 p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
+                el.querySelector('.node-status').innerText = 'PASSED';
+                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-success mt-2';
+            } else if (state === 'failed') {
+                el.className = "border border-brand-danger bg-brand-danger/5 p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
+                el.querySelector('.node-status').innerText = 'FAILED / REVIEW';
+                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-danger mt-2';
+            }
+        }
+
+        async function runPipeline() {
+            if (!currentApp) return;
+            resetNodes();
+            document.getElementById('pipeline-results').classList.add('hidden');
+
+            const steps = ['kyc', 'credit', 'policy', 'arbitrator'];
+            
+            // Visual delay simulation to show agent-by-agent processing
+            for (let i = 0; i < steps.length; i++) {
+                setNodeState(steps[i], 'active');
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            try {
+                const response = await fetch(`/api/underwrite/${currentApp.application_id}`, { method: 'POST' });
+                const result = await response.json();
+                renderResults(result);
+            } catch (err) {
+                console.error("Error invoking underwrite pipeline:", err);
+                resetNodes();
+            }
+        }
+
+        function renderResults(state) {
+            // Update node visual states based on agent results
+            const kycOut = state.kyc_output;
+            const creditOut = state.credit_output;
+            const policyOut = state.policy_output;
+            const arbOut = state.arbitrator_output;
+
+            setNodeState('kyc', (kycOut && !kycOut.missing_critical_docs && !kycOut.fraud_flag) ? 'passed' : 'failed');
+            setNodeState('credit', (creditOut && creditOut.risk_category !== 'very_high') ? 'passed' : 'failed');
+            setNodeState('policy', (policyOut && policyOut.policy_passed) ? 'passed' : 'failed');
+            setNodeState('arbitrator', (arbOut && arbOut.recommendation === 'approve') ? 'passed' : 'failed');
+            setNodeState('decision', 'active');
+
+            // Show results section
+            document.getElementById('pipeline-results').classList.remove('hidden');
+
+            // KYC Assessment
+            if (kycOut) {
+                const kycBadge = document.getElementById('kyc-badge');
+                if (kycOut.fraud_flag) {
+                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-danger/25 text-brand-danger';
+                    kycBadge.innerText = 'FRAUD ALERT';
+                    document.getElementById('kyc-fraud-alert').classList.remove('hidden');
+                } else if (kycOut.missing_critical_docs) {
+                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-warning/25 text-brand-warning';
+                    kycBadge.innerText = 'MISSING DOCS';
+                    document.getElementById('kyc-fraud-alert').classList.add('hidden');
+                } else {
+                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-success/25 text-brand-success';
+                    kycBadge.innerText = 'VERIFIED';
+                    document.getElementById('kyc-fraud-alert').classList.add('hidden');
+                }
+                document.getElementById('kyc-name').innerText = kycOut.verified_fields.name || 'N/A';
+                document.getElementById('kyc-income').innerText = kycOut.verified_fields.income ? `$${kycOut.verified_fields.income.toLocaleString()}` : 'N/A';
+                document.getElementById('kyc-employer').innerText = kycOut.verified_fields.employer || 'N/A';
+                document.getElementById('kyc-confidence').innerText = `${Math.round(kycOut.confidence * 100)}%`;
+            }
+
+            // Credit Risk
+            if (creditOut) {
+                const creditBadge = document.getElementById('credit-badge');
+                const riskColor = creditOut.risk_category === 'low' ? 'bg-brand-success/25 text-brand-success'
+                                  : creditOut.risk_category === 'medium' ? 'bg-brand-warning/25 text-brand-warning'
+                                  : 'bg-brand-danger/25 text-brand-danger';
+                creditBadge.className = `text-xs px-2.5 py-1 rounded-full font-semibold uppercase ${riskColor}`;
+                creditBadge.innerText = creditOut.risk_category;
+
+                document.getElementById('credit-score').innerText = creditOut.credit_score;
+                document.getElementById('credit-default').innerText = `${(creditOut.default_probability * 100).toFixed(2)}%`;
+                document.getElementById('credit-dti').innerText = `${(creditOut.dti_ratio * 100).toFixed(2)}%`;
+                document.getElementById('credit-confidence').innerText = `${Math.round(creditOut.confidence_score * 100)}%`;
+                document.getElementById('credit-reason').innerText = creditOut.reasoning;
+            }
+
+            // Policy Compliance
+            if (policyOut) {
+                const policyBadge = document.getElementById('policy-badge');
+                if (policyOut.policy_passed) {
+                    policyBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-success/25 text-brand-success';
+                    policyBadge.innerText = 'PASSED';
+                    document.getElementById('policy-violations-container').classList.add('hidden');
+                } else {
+                    policyBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-danger/25 text-brand-danger';
+                    policyBadge.innerText = 'VIOLATED';
+
+                    const violationsList = document.getElementById('policy-violations-list');
+                    violationsList.innerHTML = '';
+                    policyOut.violations.forEach(v => {
+                        const li = document.createElement('li');
+                        li.innerText = v;
+                        violationsList.appendChild(li);
+                    });
+                    document.getElementById('policy-violations-container').classList.remove('hidden');
+                }
+
+                document.getElementById('policy-ltv').innerText = policyOut.ltv_ratio ? `${(policyOut.ltv_ratio * 100).toFixed(2)}%` : 'N/A';
+                document.getElementById('policy-max-dti').innerText = `${Math.round(policyOut.max_dti_threshold * 100)}%`;
+
+                // Render retrieved policy chunks
+                const chunksContainer = document.getElementById('policy-chunks');
+                chunksContainer.innerHTML = '';
+                policyOut.retrieved_policy_chunks.forEach((chunk, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-brand-bg/50 p-3 rounded-lg text-xs border border-brand-border';
+                    div.innerHTML = `
+                        <div class="font-semibold text-brand-primary mb-1">Retrieved Policy Reference #${index + 1}</div>
+                        <p class="text-slate-300 leading-relaxed">${chunk}</p>
+                    `;
+                    chunksContainer.appendChild(div);
+                });
+            }
+
+            // Arbitrator Result
+            if (arbOut) {
+                const arbBadge = document.getElementById('arbitrator-badge');
+                const arbColor = arbOut.recommendation === 'approve' ? 'bg-brand-success/25 text-brand-success'
+                                 : arbOut.recommendation === 'deny' ? 'bg-brand-danger/25 text-brand-danger'
+                                 : 'bg-brand-warning/25 text-brand-warning';
+                arbBadge.className = `text-sm px-3.5 py-1.5 rounded-full font-bold uppercase ${arbColor}`;
+                arbBadge.innerText = arbOut.recommendation;
+
+                document.getElementById('arbitrator-agreement').innerText = arbOut.agent_agreement.toUpperCase();
+                document.getElementById('arbitrator-summary').innerText = arbOut.summary;
+                document.getElementById('arbitrator-confidence').innerText = `${Math.round(arbOut.confidence_score * 100)}%`;
+
+                // Render risk flags
+                if (arbOut.risk_flags && arbOut.risk_flags.length > 0) {
+                    const flagsList = document.getElementById('arbitrator-flags-list');
+                    flagsList.innerHTML = '';
+                    arbOut.risk_flags.forEach(f => {
+                        const li = document.createElement('li');
+                        li.innerText = f;
+                        flagsList.appendChild(li);
+                    });
+                    document.getElementById('arbitrator-flags-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('arbitrator-flags-container').classList.add('hidden');
+                }
+            }
+
+            // Reset officer decision form to align with recommendation
+            if (arbOut) {
+                const decisionSelect = document.getElementById('officer-decision');
+                if (arbOut.recommendation === 'approve') {
+                    decisionSelect.value = 'approve';
+                } else if (arbOut.recommendation === 'deny') {
+                    decisionSelect.value = 'deny';
+                } else {
+                    decisionSelect.value = 'override_approve';
+                }
+            }
+        }
+
+        async function submitDecision() {
+            if (!currentApp) return;
+
+            const officerId = document.getElementById('officer-id').value.trim();
+            const decision = document.getElementById('officer-decision').value;
+            const overrideReason = document.getElementById('officer-reason').value.trim();
+
+            if (!officerId) {
+                alert("Please provide an Officer ID");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/decision/${currentApp.application_id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        officer_id: officerId,
+                        decision: decision,
+                        override_reason: overrideReason
+                    })
+                });
+                const result = await response.json();
+                
+                // Show final status
+                const finalStatusContainer = document.getElementById('final-status-container');
+                const finalStatusVal = document.getElementById('final-status-value');
+                finalStatusContainer.classList.remove('hidden');
+                
+                if (result.final_status === 'approved') {
+                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-success";
+                    finalStatusVal.innerText = "APPROVED";
+                    setNodeState('decision', 'passed');
+                } else if (result.final_status === 'denied') {
+                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
+                    finalStatusVal.innerText = "DENIED";
+                    setNodeState('decision', 'failed');
+                } else {
+                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
+                    finalStatusVal.innerText = "UNDER MANUAL REVIEW";
+                    setNodeState('decision', 'active');
+                }
+                
+                // Smooth scroll to final status
+                finalStatusContainer.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                console.error("Error submitting manual decision:", err);
+            }
+        }
+
+        // Init
+        fetchApplications();
+    </script>
+</body>
+</html>

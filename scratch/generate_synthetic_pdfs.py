@@ -180,6 +180,79 @@ def main():
         ["Account Holder: F. Forger", "Monthly deposit: $7,000"],
     )
 
+    # 7. Grace Hopper (APP-007)
+    generate_pdf(
+        "data/synthetic_docs/APP-007-id.pdf",
+        "Identity Document",
+        ["Document Type: ID Proof", "Name: Grace Hopper", "DOB: 12/09/1906"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-007-pay_slip.pdf",
+        "Pay Slip",
+        ["Employee Name: Grace Hopper", "Employer: Navy", "Gross pay: $4,166"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-007-bank_statement.pdf",
+        "Bank Account Statement",
+        ["Account Holder: Grace Hopper", "Monthly deposit: $4,166", "Monthly debt: $3,000"],
+    )
+
+    # 8. Henry Cavill (APP-008)
+    generate_pdf(
+        "data/synthetic_docs/APP-008-id.pdf",
+        "Identity Document",
+        ["Document Type: ID Proof", "Name: Henry Cavill", "DOB: 05/05/1983"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-008-pay_slip.pdf",
+        "Pay Slip",
+        ["Employee Name: Henry Cavill", "Employer: WarnerBros", "Gross pay: $10,000"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-008-bank_statement.pdf",
+        "Bank Account Statement",
+        ["Account Holder: Henry Cavill", "Monthly deposit: $10,000", "Monthly debt: $4,200"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-008-employment_letter.pdf",
+        "Employment Verification Letter",
+        ["Employment confirmation: Henry Cavill has been employed at WarnerBros for 15 months."],
+    )
+
+    # 9. Irene Adler (APP-009)
+    generate_pdf(
+        "data/synthetic_docs/APP-009-id.pdf",
+        "Identity Document",
+        ["Document Type: ID Proof", "Name: Irene Adler", "DOB: 06/06/1986"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-009-pay_slip.pdf",
+        "Pay Slip",
+        ["Employee Name: Irene Adler", "Employer: AdlerConsulting", "Gross pay: $7,083"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-009-bank_statement.pdf",
+        "Bank Account Statement",
+        ["Account Holder: Irene Adler", "Monthly deposit: $7,083", "Monthly debt: $1,500"],
+    )
+
+    # 10. Jack Reacher (APP-010)
+    generate_pdf(
+        "data/synthetic_docs/APP-010-id.pdf",
+        "Identity Document",
+        ["Document Type: ID Proof", "Name: Jack Reacher", "DOB: 10/29/1960"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-010-pay_slip.pdf",
+        "Pay Slip",
+        ["Employee Name: Jack Reacher", "Employer: Military", "Gross pay: $5,000"],
+    )
+    generate_pdf(
+        "data/synthetic_docs/APP-010-bank_statement.pdf",
+        "Bank Account Statement",
+        ["Account Holder: Jack Reacher", "Monthly deposit: $3,500"],
+    )
+
 
 if __name__ == "__main__":
     main()

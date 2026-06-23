@@ -286,5 +286,194 @@
     "expected_recommendation": "review_required",
     "fraud_expected": true,
     "description": "Test Case 6 (Bonus): Fraud Flag. Name mismatch between ID ('Frank Forger') and pay slip ('Francis Forgett'). KYC agent must detect inconsistency and route immediately to human_review, bypassing credit and policy assessment."
+  },
+  {
+    "application_id": "APP-007",
+    "applicant_data": {
+      "name": "Grace Hopper",
+      "income": 50000,
+      "monthly_debt": 3000,
+      "loan_amount": 150000,
+      "property_value": 200000,
+      "employment_months": 48
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Grace Hopper, DOB: 12/09/1906",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Grace Hopper",
+          "dob": "12/09/1906"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $4,166. Monthly debt: $3,000.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 4166,
+          "monthly_debt": 3000
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Grace Hopper. Employer: Navy. Gross pay: $4,166.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "Navy",
+          "income_monthly": 4166
+        }
+      }
+    ],
+    "expected_recommendation": "deny",
+    "description": "Test Case 7: Clean Denial. High DTI (72%) exceeding the standard and hard limit thresholds."
+  },
+  {
+    "application_id": "APP-008",
+    "applicant_data": {
+      "name": "Henry Cavill",
+      "income": 120000,
+      "monthly_debt": 4200,
+      "loan_amount": 400000,
+      "property_value": 510000,
+      "employment_months": 15
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Henry Cavill, DOB: 05/05/1983",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Henry Cavill",
+          "dob": "05/05/1983"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $10,000. Monthly debt: $4,200.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 10000,
+          "monthly_debt": 4200
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Henry Cavill. Employer: WarnerBros. Gross pay: $10,000.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "WarnerBros",
+          "income_monthly": 10000
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Employment confirmation: Henry Cavill has been employed at WarnerBros for 15 months.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "WarnerBros",
+          "employment_months": 15
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 8: Borderline DTI. DTI ratio of 42% is close to the 45% standard limit."
+  },
+  {
+    "application_id": "APP-009",
+    "applicant_data": {
+      "name": "Irene Adler",
+      "income": 85000,
+      "monthly_debt": 1500,
+      "loan_amount": 180000,
+      "property_value": 250000,
+      "employment_months": 30
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Irene Adler, DOB: 06/06/1986",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Irene Adler",
+          "dob": "06/06/1986"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $7,083. Monthly debt: $1,500.",
+        "validation_status": "needs_review",
+        "confidence": 0.55,
+        "extracted_fields": {
+          "income_monthly": 7083,
+          "monthly_debt": 1500
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Irene Adler. Employer: AdlerConsulting. Gross pay: $7,083.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "AdlerConsulting",
+          "income_monthly": 7083
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 9: Low Confidence Document. Bank statement has a low confidence score (55%), triggering officer review."
+  },
+  {
+    "application_id": "APP-010",
+    "applicant_data": {
+      "name": "Jack Reacher",
+      "income": 60000,
+      "monthly_debt": 500,
+      "loan_amount": 120000,
+      "property_value": 180000,
+      "employment_months": 24
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Jack Reacher, DOB: 10/29/1960",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Jack Reacher",
+          "dob": "10/29/1960"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Jack Reacher. Monthly deposit: $3,500.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "income_monthly": 3500
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Jack Reacher. Employer: Military. Gross pay: $5,000.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "Military",
+          "income_monthly": 5000
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 10: Income Mismatch. Monthly income on pay slip ($5,000) vs bank statement ($3,500) differs by 30% (>20% limit)."
   }
 ]

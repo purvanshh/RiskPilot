@@ -9,7 +9,7 @@ test:
 	pytest -v --cov=src --cov-report=term-missing
 
 run-demo:
-	streamlit run src/ui/officer_dashboard.py
+	python src/ui/app.py
 
 lint:
 	flake8 src/ tests/
