@@ -1,0 +1,26 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	kyc(kyc)
+	credit(credit)
+	policy(policy)
+	arbitrator(arbitrator)
+	retry(retry)
+	human_review(human_review)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> kyc;
+	arbitrator -.-> human_review;
+	credit --> policy;
+	kyc -.-> credit;
+	kyc -.-> human_review;
+	kyc -.-> retry;
+	policy --> arbitrator;
+	human_review --> __end__;
+	retry --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
