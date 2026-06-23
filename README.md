@@ -299,7 +299,7 @@ cat logs/audit.jsonl | python -m json.tool | head -40
 |--------|--------|--------|
 | **Purvansh** | 1, 4, 5, 10, 14, 16 | Data pipeline, KYC agent, synthetic data, input guardrails, resilience |
 | **Aarya** | 2, 6, 11, 15, 19 | State schema, credit scoring, output guards, integration testing |
-| **Deepak** | 3, 7, 17, 20 | RAG pipeline, policy agent, performance, general guidelines |
+| **Deepak** | 3, 7, 17, 18, 20 | RAG pipeline, policy agent, performance, general guidelines |
 | **Divyanshu** | 8, 9, 12, 13 | Arbitrator, graph orchestration, HITL UI, observability |
 
 ---

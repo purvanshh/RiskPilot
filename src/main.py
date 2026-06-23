@@ -73,7 +73,14 @@ def _print_trace_url(run_id: str) -> None:
         from langsmith import Client
 
         client = Client()
-        url = client.get_run_url(run_id=run_id)
+        try:
+            url = client.get_run_url(run_id)  # positional
+        except TypeError:
+            try:
+                url = client.get_run_url(run_id=run_id)  # keyword
+            except TypeError:
+                project = os.getenv("LANGSMITH_PROJECT", "RiskPilot")
+                url = f"https://smith.langchain.com/o/default/projects/p/{project}/r/{run_id}"
         print(f"[trace] View trace: {url}")
     except Exception as e:  # pragma: no cover - network/credentials dependent
         project = os.getenv("LANGSMITH_PROJECT", "RiskPilot")
