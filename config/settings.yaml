@@ -1,23 +1,23 @@
 # Loan Underwriter Multi-Agent configuration settings
 app:
-  name: "Loan Approval Multi-Agent Underwriter"
+  name: "RiskPilot — Loan Approval Multi-Agent Underwriter"
   version: "1.0.0"
-  debug: true
+  debug: false
 
 model:
   name: "gpt-4o"
   temperature: 0.0
 
 embeddings:
-  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  model_name: "BAAI/bge-small-en-v1.5"   # matches src/rag/embeddings.py default
 
 vector_store:
   persist_directory: "./data/chroma_db"
-  collection_name: "policy_documents"
+  collection_name: "lending_policy"       # must match src/rag/policy_loader.py & retriever.py
 
 tracing:
   enabled: true
-  project: "loan-underwriter"
+  project: "RiskPilot"                    # matches LANGSMITH_PROJECT in .env.example
 
 kyc:
   min_required_docs: 3
