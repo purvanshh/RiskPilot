@@ -17,6 +17,11 @@ from src.tools.data_loader import build_state_from_app, load_test_applications  
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("riskpilot.app")
 
+# Suppress verbose third-party logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+
 app = Flask(__name__, static_folder="static")
 
 TEST_DATA_PATH = os.path.join(_PROJECT_ROOT, "data", "test_applications.json")
