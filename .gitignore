@@ -22,6 +22,7 @@ build/
 
 # Logs
 *.log
+logs/
 langsmith_traces/
 
 # Coverage

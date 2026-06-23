@@ -1,12 +1,20 @@
 import logging
 from typing import Any, Dict, List
 
-from src.graph.state import ArbitratorOutput, LoanApplicationState, validate_state
+from src.graph.state import (
+    ArbitratorOutput,
+    LoanApplicationState,
+    graceful_fallback,
+    timeout_resilience,
+    validate_state,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @validate_state
+@graceful_fallback("arbitrator")
+@timeout_resilience(30.0)
 def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Arbitrator Agent Node
