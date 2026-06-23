@@ -264,6 +264,20 @@ def extract_fields(text: str, document_type: str = "id_proof") -> Dict[str, Any]
         data["extracted_fields"] = {
             k: v for k, v in data.get("extracted_fields", {}).items() if v is not None
         }
+
+        # Normalize confidence to [0.0, 1.0] range
+        confidence = data.get("confidence", 0.90)
+        if isinstance(confidence, str):
+            confidence = confidence.replace("%", "").strip()
+        try:
+            confidence = float(confidence)
+            if confidence > 1.0:
+                confidence /= 100.0
+            confidence = max(0.0, min(1.0, confidence))
+        except (ValueError, TypeError):
+            confidence = 0.90
+        data["confidence"] = confidence
+
         return data
     except Exception:
         # Graceful degradation on model call errors

@@ -1,0 +1,25 @@
+[flake8]
+# Matches black line-length and pre-commit hook setting
+max-line-length = 100
+
+# Ignore rules that conflict with black's formatting
+extend-ignore =
+    # E203: whitespace before ':' (black adds this in slice expressions)
+    E203,
+    # W503: line break before binary operator (black's preferred style)
+    W503
+
+# Exclude generated / third-party directories
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    build,
+    dist,
+    data/chroma_db,
+    scratch
+
+# Per-file overrides: test files allow longer lines (assertion strings, fixtures)
+per-file-ignores =
+    tests/*:E501

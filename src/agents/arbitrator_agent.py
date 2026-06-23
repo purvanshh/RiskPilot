@@ -183,9 +183,7 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
             recommendation = "review_required"
             agreement = "partial"
             confidence_score = 0.72
-            risk_flags.append(
-                f"Weighted agent vote inconclusive (score {weighted_score:+.2f})"
-            )
+            risk_flags.append(f"Weighted agent vote inconclusive (score {weighted_score:+.2f})")
 
     # Calculate agreement level
     if recommendation == "approve" and policy_passed and kyc_ok and credit_risk == "low":
@@ -205,7 +203,9 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
         f"Arbitrator Recommendation: {recommendation.upper()} (Confidence: {confidence_score:.0%})."
     )
     summary_parts.append(f"Agent Agreement Level: {agreement.upper()}.")
-    summary_parts.append(f"Weighted vote score: {weighted_score:+.2f} (range -1 deny .. +1 approve).")
+    summary_parts.append(
+        f"Weighted vote score: {weighted_score:+.2f} (range -1 deny .. +1 approve)."
+    )
     if risk_flags:
         summary_parts.append(f"Risk Flags: {'; '.join(risk_flags)}.")
     else:

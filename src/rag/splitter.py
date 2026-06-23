@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 from langchain.docstore.document import Document
 
@@ -54,9 +54,7 @@ def split_markdown_document(file_path: Path) -> List[Document]:
 
     for section in sections:
         section_name = section["section"]
-        for chunk_text in _simple_recursive_split(
-            section["text"], CHUNK_SIZE, CHUNK_OVERLAP
-        ):
+        for chunk_text in _simple_recursive_split(section["text"], CHUNK_SIZE, CHUNK_OVERLAP):
             metadata = {
                 "document": document_name,
                 "section": section_name,
@@ -67,7 +65,5 @@ def split_markdown_document(file_path: Path) -> List[Document]:
             documents.append(Document(page_content=chunk_text, metadata=metadata))
             chunk_index += 1
 
-    logger.debug(
-        "Split markdown document %s into %d chunks.", file_path.name, len(documents)
-    )
+    logger.debug("Split markdown document %s into %d chunks.", file_path.name, len(documents))
     return documents

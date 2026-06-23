@@ -124,8 +124,10 @@ def main(argv=None) -> None:
         target = argv[0]
         match = next((a for a in apps if a.get("application_id") == target), None)
         if match is None:
-            print(f"Application '{target}' not found. Available: "
-                  f"{', '.join(a.get('application_id', '?') for a in apps)}")
+            print(
+                f"Application '{target}' not found. Available: "
+                f"{', '.join(a.get('application_id', '?') for a in apps)}"
+            )
             return
         run_application(match)
     else:

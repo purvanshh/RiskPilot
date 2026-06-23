@@ -53,8 +53,7 @@ def summarize_for_officer(state: LoanApplicationState) -> str:
     if state.policy_output:
         p = state.policy_output
         lines.append(
-            f"Policy   : passed={p.policy_passed}, "
-            f"ltv={p.ltv_ratio}, violations={p.violations}"
+            f"Policy   : passed={p.policy_passed}, " f"ltv={p.ltv_ratio}, violations={p.violations}"
         )
     if state.arbitrator_output:
         a = state.arbitrator_output
@@ -94,9 +93,7 @@ def human_review_ui(
             override_reason = input("Override reason (required): ").strip()
 
     if decision not in VALID_DECISIONS:
-        raise ValueError(
-            f"Invalid decision '{decision}'. Must be one of {VALID_DECISIONS}."
-        )
+        raise ValueError(f"Invalid decision '{decision}'. Must be one of {VALID_DECISIONS}.")
 
     if "override" in decision and not (override_reason and override_reason.strip()):
         raise ValueError("override_reason is required when overriding the recommendation.")

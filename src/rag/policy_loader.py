@@ -1,7 +1,4 @@
-import glob
 import logging
-import os
-import re
 from pathlib import Path
 from typing import Dict, List
 
@@ -70,7 +67,9 @@ def _split_document(file_path: Path) -> List[Document]:
             end = min(len(text), start + CHUNK_SIZE)
             chunk = text[start:end].strip()
             if chunk:
-                metadata = _build_chunk_metadata(file_path, document_name, section_name, chunk_index)
+                metadata = _build_chunk_metadata(
+                    file_path, document_name, section_name, chunk_index
+                )
                 documents.append(Document(page_content=chunk, metadata=metadata))
                 chunk_index += 1
             start += CHUNK_SIZE - CHUNK_OVERLAP

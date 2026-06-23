@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import List
 
 from src.graph.state import LoanApplicationState, PolicyCheckOutput
 from src.rag.evaluator import evaluate_policy
@@ -17,7 +17,9 @@ DEFAULT_QUERIES = [
 ]
 
 
-def _deduplicate_chunks(chunks: List[RetrievedPolicyChunk]) -> List[RetrievedPolicyChunk]:
+def _deduplicate_chunks(
+    chunks: List[RetrievedPolicyChunk],
+) -> List[RetrievedPolicyChunk]:
     seen_texts = set()
     unique_chunks: List[RetrievedPolicyChunk] = []
     for chunk in chunks:

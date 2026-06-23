@@ -52,7 +52,10 @@ def test_input_guardrail_invalid_file_type():
     }
     docs = [
         {"document_type": "id_proof", "filename": "id.pdf"},
-        {"document_type": "pay_slip", "filename": "pay.txt"},  # TXT is not allowed under 8.1
+        {
+            "document_type": "pay_slip",
+            "filename": "pay.txt",
+        },  # TXT is not allowed under 8.1
         {"document_type": "bank_statement", "filename": "bank.png"},
     ]
 
@@ -74,7 +77,11 @@ def test_input_guardrail_file_size_exceeded(tmp_path):
 
     # Test via size metadata key
     docs_meta = [
-        {"document_type": "id_proof", "filename": "id.pdf", "file_size": 10 * 1024 * 1024 + 10},
+        {
+            "document_type": "id_proof",
+            "filename": "id.pdf",
+            "file_size": 10 * 1024 * 1024 + 10,
+        },
         {"document_type": "pay_slip", "filename": "pay.jpg"},
         {"document_type": "bank_statement", "filename": "bank.png"},
     ]

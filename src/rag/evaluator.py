@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from src.rag.retriever import RetrievedPolicyChunk
 
@@ -27,9 +27,7 @@ def _compute_sources(chunks: List[RetrievedPolicyChunk]) -> List[str]:
     return sources
 
 
-def _find_citation(
-    chunks: List[RetrievedPolicyChunk], keywords: List[str], default: str
-) -> str:
+def _find_citation(chunks: List[RetrievedPolicyChunk], keywords: List[str], default: str) -> str:
     keyword_set = {word.lower() for word in keywords}
     for chunk in chunks:
         text = chunk.text.lower()
@@ -57,7 +55,8 @@ def evaluate_policy(
             "Credit Policy | Minimum Credit Requirement | chunk 0",
         )
         violations.append(
-            f"Credit score {credit_score} is below the minimum requirement of 650. Citation: {citation}"
+            f"Credit score {credit_score} is below the minimum requirement of 650. "
+            f"Citation: {citation}"
         )
 
     if dti > 0.50:
@@ -76,7 +75,8 @@ def evaluate_policy(
             "DTI Policy | Maximum DTI Thresholds | chunk 0",
         )
         violations.append(
-            f"DTI ratio {dti:.2%} exceeds the standard maximum threshold of 45%. Citation: {citation}"
+            f"DTI ratio {dti:.2%} exceeds the standard maximum threshold of 45%. "
+            f"Citation: {citation}"
         )
 
     if ltv > 0.85:
@@ -96,7 +96,8 @@ def evaluate_policy(
                 "LTV Policy | Exceptions | chunk 0",
             )
             violations.append(
-                f"LTV ratio {ltv:.2%} exceeds the standard threshold of 80% and exception conditions are not met. Citation: {citation}"
+                f"LTV ratio {ltv:.2%} exceeds the standard threshold of 80%"
+                f" and exception conditions are not met. Citation: {citation}"
             )
 
     if employment_months < 6:
@@ -106,7 +107,8 @@ def evaluate_policy(
             "Employment Stability Policy | Direct Denial | chunk 0",
         )
         violations.append(
-            f"Employment tenure of {employment_months} months is below the hard minimum of 6 months. Citation: {citation}"
+            f"Employment tenure of {employment_months} months is below"
+            f" the hard minimum of 6 months. Citation: {citation}"
         )
     elif employment_months < 12:
         citation = _find_citation(
@@ -115,7 +117,8 @@ def evaluate_policy(
             "Employment Stability Policy | Minimum Stability | chunk 0",
         )
         violations.append(
-            f"Employment tenure of {employment_months} months is below the standard requirement of 12 months. Citation: {citation}"
+            f"Employment tenure of {employment_months} months is below"
+            f" the standard requirement of 12 months. Citation: {citation}"
         )
 
     if income_document_count is not None and income_document_count < 2:
@@ -125,7 +128,8 @@ def evaluate_policy(
             "Income Verification Policy | Documentation Requirements | chunk 0",
         )
         violations.append(
-            f"Income verification requires two documents, but only {income_document_count} were available. Citation: {citation}"
+            f"Income verification requires two documents, but only"
+            f" {income_document_count} were available. Citation: {citation}"
         )
 
     policy_passed = len(violations) == 0

@@ -10,7 +10,11 @@ def make_state():
     return LoanApplicationState(
         application_id="APP-HITL",
         applicant_data={"name": "HITL Test"},
-        kyc_output={"missing_critical_docs": False, "fraud_flag": False, "confidence": 0.9},
+        kyc_output={
+            "missing_critical_docs": False,
+            "fraud_flag": False,
+            "confidence": 0.9,
+        },
         arbitrator_output=ArbitratorOutput(
             recommendation="review_required",
             confidence_score=0.7,

@@ -8,7 +8,6 @@ vote. Runs in complete isolation from Members A/B/C — no parsing, scoring, or 
 from src.agents.arbitrator_agent import arbitrator_node, compute_weighted_vote
 from src.graph.state import CreditRiskOutput, LoanApplicationState, PolicyCheckOutput
 
-
 # --- Helpers to build dummy agent outputs ------------------------------------
 
 
@@ -64,9 +63,12 @@ def run(kyc, credit, policy):
 
 def test_weighted_vote_all_positive_leans_approve():
     vote = compute_weighted_vote(
-        kyc_confidence=0.9, kyc_score=1.0,
-        credit_confidence=0.85, credit_score_lean=1.0,
-        policy_confidence=0.9, policy_score_lean=1.0,
+        kyc_confidence=0.9,
+        kyc_score=1.0,
+        credit_confidence=0.85,
+        credit_score_lean=1.0,
+        policy_confidence=0.9,
+        policy_score_lean=1.0,
     )
     assert vote["weighted_score"] > 0.9
     assert vote["implied_recommendation"] == "approve"
@@ -74,9 +76,12 @@ def test_weighted_vote_all_positive_leans_approve():
 
 def test_weighted_vote_all_negative_leans_deny():
     vote = compute_weighted_vote(
-        kyc_confidence=0.9, kyc_score=-1.0,
-        credit_confidence=0.85, credit_score_lean=-1.0,
-        policy_confidence=0.9, policy_score_lean=-1.0,
+        kyc_confidence=0.9,
+        kyc_score=-1.0,
+        credit_confidence=0.85,
+        credit_score_lean=-1.0,
+        policy_confidence=0.9,
+        policy_score_lean=-1.0,
     )
     assert vote["weighted_score"] < -0.9
     assert vote["implied_recommendation"] == "deny"
@@ -97,9 +102,12 @@ def test_weighted_vote_zero_confidence_is_neutral():
 def test_weighted_vote_low_confidence_agent_has_less_say():
     """A high-confidence approve should outweigh a low-confidence deny."""
     vote = compute_weighted_vote(
-        kyc_confidence=0.95, kyc_score=1.0,
-        credit_confidence=0.95, credit_score_lean=1.0,
-        policy_confidence=0.1, policy_score_lean=-1.0,
+        kyc_confidence=0.95,
+        kyc_score=1.0,
+        credit_confidence=0.95,
+        credit_score_lean=1.0,
+        policy_confidence=0.1,
+        policy_score_lean=-1.0,
     )
     assert vote["weighted_score"] > 0
     assert vote["implied_recommendation"] == "approve"

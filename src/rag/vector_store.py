@@ -44,7 +44,13 @@ def get_vector_store(
                 self._documents.extend(documents)
                 self._metadatas.extend(metadatas)
 
-            def query(self, query_embeddings=None, query_texts=None, n_results=10, include=None):
+            def query(
+                self,
+                query_embeddings=None,
+                query_texts=None,
+                n_results=10,
+                include=None,
+            ):
                 if query_texts is None:
                     query_texts = [""]
                 query_text = query_texts[0].lower()

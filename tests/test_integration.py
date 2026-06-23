@@ -12,7 +12,6 @@ Strategy:
 All 5 PRD test case profiles are covered.
 """
 
-
 import pytest
 
 from src.agents.credit_agent import credit_node
@@ -176,7 +175,9 @@ def test_integration_system_recommendation_with_dti_hard_stop(mock_arbitrator_ap
     assert len(dti_flags) > 0
 
 
-def test_integration_system_recommendation_conflict_forces_review(mock_arbitrator_conflict):
+def test_integration_system_recommendation_conflict_forces_review(
+    mock_arbitrator_conflict,
+):
     """
     An arbitrator output with agent_agreement='conflict' must force review.
     """
@@ -265,7 +266,12 @@ def test_integration_state_schema_roundtrip(state_clean_approval):
         (80000, 1200, 36, "low"),  # APP-001: clean approval
         (30000, 1375, 8, "very_high"),  # APP-002: clean denial
         (90000, 1500, 48, "low"),  # APP-004: Diana Prince (high income)
-        (100000, 3166, 11, "low"),  # APP-005: Evan Wright (policy edge — credit still ok)
+        (
+            100000,
+            3166,
+            11,
+            "low",
+        ),  # APP-005: Evan Wright (policy edge — credit still ok)
     ],
 )
 def test_parametrised_credit_risk_levels(income, monthly_debt, employment_months, expected_risk):

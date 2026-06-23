@@ -270,7 +270,10 @@ def graceful_fallback(fallback_type: str):
                         summary=f"Arbitration failed due to system error: {str(e)}",
                         risk_flags=[f"System error in arbitration: {str(e)}"],
                     )
-                    return {"arbitrator_output": arbitrator_output, "error_log": error_log}
+                    return {
+                        "arbitrator_output": arbitrator_output,
+                        "error_log": error_log,
+                    }
                 else:
                     return {"error_log": error_log}
 

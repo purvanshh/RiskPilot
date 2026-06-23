@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.rag.cache import needs_indexing
 from src.rag.embeddings import get_embedding_provider
 from src.rag.policy_loader import load_and_index_policies
 from src.rag.vector_store import get_vector_store
