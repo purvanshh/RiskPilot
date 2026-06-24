@@ -98,8 +98,11 @@ def human_review_ui(
     if "override" in decision and not (override_reason and override_reason.strip()):
         raise ValueError("override_reason is required when overriding the recommendation.")
 
+    if not officer_id or not officer_id.strip():
+        raise ValueError("officer_id must be a non-empty string.")
+
     human_decision = HumanDecision(
-        officer_id=officer_id,
+        officer_id=officer_id.strip(),
         decision=decision,
         override_reason=(override_reason.strip() if override_reason else None),
         timestamp=datetime.now(timezone.utc).isoformat(),

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import sys
@@ -11,7 +12,7 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 from src.graph.graph import graph  # noqa: E402
-from src.graph.state import HumanDecision  # noqa: E402
+from src.graph.state import HumanDecision, LoanApplicationState  # noqa: E402
 from src.tools.data_loader import build_state_from_app, load_test_applications  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +26,11 @@ logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 app = Flask(__name__, static_folder="static")
 
 TEST_DATA_PATH = os.path.join(_PROJECT_ROOT, "data", "test_applications.json")
+
+# In-memory store of pipeline output states keyed by application_id.
+# Used by the decision endpoint to apply human decisions to the *exact*
+# agent outputs the officer reviewed, preventing state desync.
+_PIPELINE_STATE: dict[str, dict] = {}
 
 
 def serialize_value(val):
@@ -58,14 +64,41 @@ def get_applications():
         return jsonify(apps)
     except Exception as e:
         logger.error(f"Error loading applications: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to load applications."}), 500
+
+
+def _parse_json_body() -> tuple[dict | None, tuple | None]:
+    """Parse and validate the JSON request body.
+
+    Returns:
+        (parsed_dict, None) on success.
+        (None, error_response_tuple) on failure — caller should return the tuple immediately.
+    """
+    data = request.get_json(silent=True)
+    if data is None:
+        return None, (jsonify({"error": "Request body must be a valid JSON object."}), 400)
+    if not isinstance(data, dict):
+        return None, (
+            jsonify({"error": "Request body must be a JSON object, not a primitive or array."}),
+            400,
+        )
+    return data, None
+
+
+def _str_field(data: dict, key: str, default: str = "") -> str:
+    """Safely extract a string field, coercing non-string values."""
+    val = data.get(key, default)
+    return str(val).strip() if val is not None else default
 
 
 @app.route("/api/underwrite/<app_id>", methods=["POST"])
 def underwrite_application(app_id):
+    data, err = _parse_json_body()
+    if err:
+        return err
+
     try:
-        data = request.json or {}
-        fast_mode = data.get("fast_mode", False)
+        fast_mode = _str_field(data, "fast_mode", "false").lower() in ("true", "1", "yes")
 
         apps = load_test_applications(TEST_DATA_PATH)
         app_data = next((a for a in apps if a.get("application_id") == app_id), None)
@@ -78,48 +111,85 @@ def underwrite_application(app_id):
         # Run graph
         final_state_dict = graph.invoke(initial_state)
         serialized = serialize_state(final_state_dict)
+
+        # Persist the pipeline output state for the decision endpoint
+        _PIPELINE_STATE[app_id] = serialized
+
         return jsonify(serialized)
     except Exception as e:
         logger.error(f"Error executing underwrite for {app_id}: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal pipeline error. See server logs."}), 500
 
 
 @app.route("/api/decision/<app_id>", methods=["POST"])
 def submit_decision(app_id):
+    data, err = _parse_json_body()
+    if err:
+        return err
+
     try:
-        data = request.json or {}
-        officer_id = data.get("officer_id", "OFFICER-01")
-        decision = data.get("decision")
+        officer_id = _str_field(data, "officer_id")
+        decision = _str_field(data, "decision")
         override_reason = data.get("override_reason")
-        fast_mode = data.get("fast_mode", False)
 
+        # --- Input validation ---
         if not decision:
-            return jsonify({"error": "decision is required"}), 400
+            return jsonify({"error": "'decision' field is required."}), 400
 
-        apps = load_test_applications(TEST_DATA_PATH)
-        app_data = next((a for a in apps if a.get("application_id") == app_id), None)
-        if not app_data:
-            return jsonify({"error": f"Application {app_id} not found"}), 404
+        valid_decisions = {"approve", "deny", "override_approve", "override_deny"}
+        if decision not in valid_decisions:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            f"Invalid decision '{decision}'. "
+                            f"Must be one of: {sorted(valid_decisions)}"
+                        )
+                    }
+                ),
+                400,
+            )
 
-        initial_state = build_state_from_app(app_data, use_pdf_paths=not fast_mode)
+        if not officer_id:
+            return jsonify({"error": "'officer_id' must be a non-empty string."}), 400
 
-        # Inject decision
-        import datetime
+        # Enforce that the pipeline must have run before a decision is accepted
+        if app_id not in _PIPELINE_STATE:
+            return (
+                jsonify({"error": "Pipeline must be run before a decision can be submitted."}),
+                400,
+            )
 
-        initial_state.human_decision = HumanDecision(
+        # Use the stored pipeline state to preserve agent outputs exactly as the
+        # officer reviewed them, then apply the human decision.
+        previous_state_dict = _PIPELINE_STATE[app_id].copy()
+
+        # Reconstruct LoanApplicationState from the stored state dict
+        previous_state = LoanApplicationState.from_dict(previous_state_dict)
+
+        # Inject the human decision while preserving all computed agent outputs
+        previous_state.human_decision = HumanDecision(
             officer_id=officer_id,
             decision=decision,
-            override_reason=override_reason,
+            override_reason=override_reason
+            if (override_reason and override_reason.strip())
+            else None,
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         )
 
-        # Re-run graph
-        final_state_dict = graph.invoke(initial_state)
-        serialized = serialize_state(final_state_dict)
+        # Run only the human_review node to apply the decision,
+        # keeping all prior agent outputs intact.
+        from src.graph.graph import human_review_node
+
+        state_updates = human_review_node(previous_state)
+        merged = previous_state.to_dict()
+        merged.update(state_updates)
+        merged["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        serialized = serialize_state(merged)
         return jsonify(serialized)
     except Exception as e:
         logger.error(f"Error submitting decision for {app_id}: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error processing decision. See server logs."}), 500
 
 
 if __name__ == "__main__":
