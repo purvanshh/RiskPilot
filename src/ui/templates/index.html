@@ -1218,6 +1218,12 @@
                             chunkText = String(chunkRaw);
                         }
 
+                        // Clean up markdown markers (like * and #) for clean web rendering
+                        const cleanedText = chunkText
+                            .replace(/[#*`~_]/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
                         const div = document.createElement('div');
                         div.className = 'policy-chunk-card';
                         div.innerHTML = `
@@ -1225,7 +1231,7 @@
                                 <span class="policy-citation">${citationText}</span>
                                 ${scoreText ? `<span class="policy-score">${scoreText}</span>` : `<span class="policy-score">Ref #${index + 1}</span>`}
                             </div>
-                            <p class="text-slate-300 text-xs leading-relaxed">${chunkText}</p>
+                            <p class="text-slate-300 text-xs leading-relaxed">${cleanedText}</p>
                         `;
                         chunksContainer.appendChild(div);
                     });
