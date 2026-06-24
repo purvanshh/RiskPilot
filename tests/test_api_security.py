@@ -26,16 +26,20 @@ from src.ui.app import app as _app
 def client():
     """Flask test client with isolated request context."""
     _app.config["TESTING"] = True
+    from src.ui.app import limiter
+
+    limiter.enabled = False
     with _app.test_client() as c:
         yield c
 
 
 @pytest.fixture(autouse=True)
 def reset_pipeline_state():
-    """Ensure _PIPELINE_STATE is clean before every test."""
+    """Ensure _PIPELINE_STATE and _app_locks are clean before every test."""
     import src.ui.app as app_mod
 
     app_mod._PIPELINE_STATE.clear()
+    app_mod._app_locks.clear()
     yield
 
 
@@ -368,7 +372,7 @@ class TestAdditionalFindings:
         assert resp.status_code == 200
 
     def test_second_decision_overwrites_first(self, client):
-        """Submitting two decisions for the same app should overwrite the first."""
+        """Submitting a second decision for the same app must return 409 Conflict."""
         _underwrite(client, "APP-001")
         c1 = client.post(
             "/api/decision/APP-001",
@@ -379,6 +383,6 @@ class TestAdditionalFindings:
         c2 = client.post(
             "/api/decision/APP-001",
             json={"officer_id": "OFF-2", "decision": "deny"},
-        ).get_json()
-        assert c2["final_status"] == "denied"
-        assert c2["human_decision"]["officer_id"] == "OFF-2"
+        )
+        assert c2.status_code == 409
+        assert "already" in c2.get_json()["error"].lower()
