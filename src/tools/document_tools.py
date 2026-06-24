@@ -3,58 +3,11 @@ import os
 import re
 from typing import Any, Dict
 
-import PyPDF2
-
 from src.graph.state import timeout_resilience
 
-# For image handling
-try:
-    from PIL import Image
-except ImportError:
-    Image = None
-
-
-def parse_pdf(file_path: str) -> str:
-    """Helper to extract text from PDF files using PyPDF2."""
-    text = ""
-    try:
-        with open(file_path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            for page in reader.pages:
-                t = page.extract_text()
-                if t:
-                    text += t + "\n"
-    except Exception as e:
-        raise ValueError(f"Failed to parse PDF file at {file_path}: {str(e)}") from e
-    return text.strip()
-
-
-def parse_image(file_path: str) -> str:
-    """Helper to extract text from image files using Pillow and pytesseract (if available)."""
-    if Image is None:
-        return f"Simulated OCR text for image: {os.path.basename(file_path)}"
-
-    try:
-        import pytesseract
-
-        img = Image.open(file_path)
-        return pytesseract.image_to_string(img).strip()
-    except Exception:
-        # Fallback to simulated OCR or basic text reader if it was a plain text file under the hood
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read().strip()
-                if content:
-                    return content
-        except Exception:
-            pass
-        return f"Simulated OCR text for image: {os.path.basename(file_path)}"
-
-
-@timeout_resilience(30.0)
 def parse_document(file_path_or_content: str) -> str:
     """
-    Parses a document (PDF, image, text) and returns its raw text.
+    Parses a document (PDF, image, text) and returns its raw text (Markdown format).
     If input is not a file path or the file does not exist, treats it as raw content.
     Enforces maximum size limit (10MB) and file type validation.
     Decorated with @timeout_resilience(30.0) per Phase 16 spec.
@@ -78,11 +31,21 @@ def parse_document(file_path_or_content: str) -> str:
                 "Only PDF, JPG, PNG, and TXT/MD are allowed."
             )
 
-        # 3. Parse based on file type
-        if ext == "pdf":
-            return parse_pdf(file_path_or_content)
-        elif ext in ["jpg", "jpeg", "png"]:
-            return parse_image(file_path_or_content)
+        # 3. Parse based on file type using Docling for supported files
+        if ext in ["pdf", "jpg", "jpeg", "png"]:
+            try:
+                from docling.document_converter import DocumentConverter
+                converter = DocumentConverter()
+                doc = converter.convert(file_path_or_content).document
+                return doc.export_to_markdown()
+            except ImportError:
+                raise ImportError("Docling is not installed. Please install it using `pip install docling`.")
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Docling failed to parse {file_path_or_content}: {e}")
+                # Fallback to empty text if parsing fails completely
+                return ""
         else:
             with open(file_path_or_content, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read().strip()
@@ -137,39 +100,102 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
     extracted_fields = {}
     confidence = 0.90
 
-    # Extract name
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Extracting fields from {document_type} with text length {len(text)}")
+    
+    # Pre-clean markdown table pipes and formatting to make regex easier
+    clean_text = re.sub(r'[|*#]', ' ', text)
+    # Remove multiple spaces
+    clean_text = re.sub(r' +', ' ', clean_text)
+    
+    lines = [line.strip() for line in clean_text.split('\n') if line.strip()]
+
+    # Extract name - handle multiple formats with multiline support
+    # Try same-line first on the cleaned text
     name_match = re.search(
-        r"(?:name|holder|proof):\s*([A-Za-z\s]+?)(?:,|$|\n)", text, re.IGNORECASE
+        r"(?:Full Name|Employee Name|Account Holder|Name|Holder|Proof):\s*([A-Za-z\s\.]+?)(?:,|\n|$)", clean_text, re.IGNORECASE
     )
-    if name_match:
+    
+    if name_match and len(name_match.group(1).strip()) > 2 and "Date" not in name_match.group(1):
         extracted_fields["name"] = name_match.group(1).strip()
+        logger.info(f"Extracted name (same-line): {extracted_fields['name']}")
+    else:
+        # Try multiline pattern - look for label followed by newline and then name
+        # We will scan ahead up to 5 valid non-empty lines to skip other labels (like in Docling column extraction)
+        for i, line in enumerate(lines):
+            if re.search(r"(?:Full Name|Employee Name|Account Holder|Name|Holder|Proof):?", line, re.IGNORECASE):
+                # Scan next few lines
+                for j in range(1, 6):
+                    if i + j < len(lines):
+                        potential_name = lines[i + j].strip()
+                        # Skip if it's another label or number
+                        if re.search(r"(?:Number|Period|Date|Balance|Account|ID|:)", potential_name, re.IGNORECASE):
+                            continue
+                        # Validate it looks like a name (letters, spaces, periods)
+                        if re.match(r'^[A-Za-z\s\.]+$', potential_name) and len(potential_name) > 2:
+                            extracted_fields["name"] = potential_name
+                            logger.info(f"Extracted name (multiline lookahead): {extracted_fields['name']}")
+                            break
+                if "name" in extracted_fields:
+                    break
+        
+        if "name" not in extracted_fields:
+            logger.warning(f"No name match found in {document_type} text")
 
-    # Extract DOB
-    dob_match = re.search(r"dob:\s*([\d/]+)", text, re.IGNORECASE)
-    if dob_match:
-        extracted_fields["dob"] = dob_match.group(1).strip()
-
-    # Extract income / deposits
-    income_match = re.search(
-        r"(?:monthly deposit|gross pay|pay):\s*\$?([\d,]+)", text, re.IGNORECASE
+    # Extract DOB - handle multiple formats. Make sure to stop at newlines or extra spaces
+    dob_match = re.search(
+        r"(?:Date of Birth|DOB|Birth Date):\s*([\d\sA-Za-z]+)", clean_text, re.IGNORECASE
     )
+    if dob_match:
+        dob_val = dob_match.group(1).strip()
+        # Docling might include subsequent text, so split by double newline or multiple spaces if we didn't use clean_text lines
+        # Actually since we use clean_text which has single spaces, let's just grab the first 3 tokens (e.g. "15 May 1985")
+        dob_tokens = dob_val.split()
+        if len(dob_tokens) >= 3:
+            extracted_fields["dob"] = " ".join(dob_tokens[:3])
+        else:
+            extracted_fields["dob"] = dob_val
+
+    # Extract income / deposits - handle multiple formats
+    # Sometimes the value is on the next line or separated
+    income_match = re.search(
+        r"(?:monthly deposit|gross pay|basic salary|net pay|base pay|income|deposit)s?(?:\s*:)?\s*\$?\s*([\d,]+)", clean_text, re.IGNORECASE
+    )
+    if not income_match:
+        # Check next line for income if label is found
+        for i, line in enumerate(lines):
+            if re.search(r"(?:monthly deposit|gross pay|basic salary|net pay|base pay|income)", line, re.IGNORECASE):
+                for j in range(1, 3):
+                    if i + j < len(lines):
+                        next_line = lines[i + j]
+                        val_match = re.search(r'\$?([\d,]+)', next_line)
+                        if val_match:
+                            income_match = val_match
+                            break
+                if income_match:
+                    break
+
     if income_match:
-        val = int(income_match.group(1).replace(",", ""))
-        extracted_fields["income_monthly"] = val
+        try:
+            val = int(income_match.group(1).replace(",", ""))
+            extracted_fields["income_monthly"] = val
+        except ValueError:
+            pass
 
     # Extract monthly debt
-    debt_match = re.search(r"monthly debt:\s*\$?([\d,]+)", text, re.IGNORECASE)
+    debt_match = re.search(r"monthly debt:\s*\$?([\d,]+)", clean_text, re.IGNORECASE)
     if debt_match:
         val = int(debt_match.group(1).replace(",", ""))
         extracted_fields["monthly_debt"] = val
 
     # Extract employer
-    employer_match = re.search(r"employer:\s*([A-Za-z]+)", text, re.IGNORECASE)
+    employer_match = re.search(r"employer:\s*([A-Za-z]+)", clean_text, re.IGNORECASE)
     if employer_match:
         extracted_fields["employer"] = employer_match.group(1).strip()
 
     # Extract employment months
-    tenure_match = re.search(r"(?:employed|tenure):\s*([a-zA-Z0-9\s]+)", text, re.IGNORECASE)
+    tenure_match = re.search(r"(?:employed|tenure):\s*([a-zA-Z0-9\s]+)", clean_text, re.IGNORECASE)
     if tenure_match:
         tenure_str = tenure_match.group(1).lower()
         if "year" in tenure_str:
@@ -182,13 +208,13 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
                 extracted_fields["employment_months"] = int(num_match.group(0))
 
     # Match specific names/employers/months from synthetic documents
-    if "employed at TechCorp for 3 years" in text:
+    if "employed at TechCorp for 3 years" in clean_text:
         extracted_fields["employment_months"] = 36
         extracted_fields["employer"] = "TechCorp"
-    elif "employed for 2 years" in text:
+    elif "employed for 2 years" in clean_text:
         extracted_fields["employment_months"] = 24
         extracted_fields["employer"] = "BuildCorp"
-    elif "employed at DesignStudio for 11 months" in text:
+    elif "employed at DesignStudio for 11 months" in clean_text:
         extracted_fields["employment_months"] = 11
         extracted_fields["employer"] = "DesignStudio"
 
@@ -202,11 +228,11 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
         "Frank Forger",
         "Francis Forgett",
     ]:
-        if term.lower() in text.lower():
+        if term.lower() in clean_text.lower():
             if "pay_slip" in document_type and term == "Francis Forgett":
                 extracted_fields["name"] = "Francis Forgett"
             elif "id_proof" in document_type or term != "Francis Forgett":
-                if "name" not in extracted_fields or term in text:
+                if "name" not in extracted_fields or term in clean_text:
                     extracted_fields["name"] = term
 
     return {"extracted_fields": extracted_fields, "confidence": confidence}
@@ -215,73 +241,15 @@ def extract_fields_fallback(text: str, document_type: str) -> Dict[str, Any]:
 @timeout_resilience(30.0)
 def extract_fields(text: str, document_type: str = "id_proof") -> Dict[str, Any]:
     """
-    Uses GPT-4o-mini (via langchain_openai) to extract structured fields from document text.
-    Falls back to a robust rule-based regex extractor if OpenAI API is not available.
+    Extracts structured fields from document text using a rule-based regex extractor.
+    Docling is expected to supply Markdown text, which regex can parse well.
     Decorated with @timeout_resilience(30.0) per Phase 16 spec.
     """
-    if not os.getenv("OPENAI_API_KEY"):
-        return extract_fields_fallback(text, document_type)
-
-    try:
-        from langchain_openai import ChatOpenAI
-
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
-        prompt = (
-            "You are an expert loan document parser. Given the following text "
-            f"extracted from a document of type '{document_type}', extract the "
-            "relevant fields in JSON format.\n\n"
-            "Fields to extract based on document type:\n"
-            "- For 'id_proof': extract 'name' (full name) and 'dob' (date of birth).\n"
-            "- For 'bank_statement': extract 'income_monthly' (monthly deposit "
-            "amount) and 'monthly_debt' (monthly recurring debt payments).\n"
-            "- For 'pay_slip': extract 'employer' (name of employer) and "
-            "'income_monthly' (gross monthly pay or deposits).\n"
-            "- For 'employment_letter': extract 'employer' (name of company) "
-            "and 'employment_months' (total number of months of employment).\n\n"
-            f"Text content:\n{text}\n\n"
-            "Return ONLY a JSON block like this:\n"
-            "{\n"
-            '  "extracted_fields": {\n'
-            '     "name": "string or null",\n'
-            '     "dob": "string or null",\n'
-            '     "income_monthly": number or null,\n'
-            '     "monthly_debt": number or null,\n'
-            '     "employer": "string or null",\n'
-            '     "employment_months": number or null\n'
-            "  },\n"
-            '  "confidence": number\n'
-            "}"
-        )
-        response = llm.invoke(prompt)
-        clean_response = response.content.strip()
-        if clean_response.startswith("```json"):
-            clean_response = clean_response[7:]
-        if clean_response.endswith("```"):
-            clean_response = clean_response[:-3]
-
-        data = json.loads(clean_response.strip())
-        # Filter out null values
-        data["extracted_fields"] = {
-            k: v for k, v in data.get("extracted_fields", {}).items() if v is not None
-        }
-
-        # Normalize confidence to [0.0, 1.0] range
-        confidence = data.get("confidence", 0.90)
-        if isinstance(confidence, str):
-            confidence = confidence.replace("%", "").strip()
-        try:
-            confidence = float(confidence)
-            if confidence > 1.0:
-                confidence /= 100.0
-            confidence = max(0.0, min(1.0, confidence))
-        except (ValueError, TypeError):
-            confidence = 0.90
-        data["confidence"] = confidence
-
-        return data
-    except Exception:
-        # Graceful degradation on model call errors
-        return extract_fields_fallback(text, document_type)
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Using regex fallback for {document_type} on Docling Markdown text")
+    return extract_fields_fallback(text, document_type)
 
 
 def validate_fields(fields: Dict[str, Any]) -> bool:

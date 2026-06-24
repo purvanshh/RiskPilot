@@ -1,8 +1,11 @@
 import datetime
 import logging
 import os
+import shutil
 import sys
 import threading
+import time
+import uuid
 from collections import defaultdict
 from functools import wraps
 from typing import Any, Dict
@@ -27,11 +30,15 @@ from app_config import (  # noqa: E402
     MAX_CONTENT_LENGTH,
     PORT,
     SECRET_KEY,
+    UPLOAD_DIR,
 )
 
 from src.graph.graph import graph, human_review_node  # noqa: E402
 from src.graph.state import HumanDecision, LoanApplicationState  # noqa: E402
 from src.tools.data_loader import build_state_from_app, load_test_applications  # noqa: E402
+from src.tools.document_tools import detect_document_type, parse_document  # noqa: E402
+from src.graph.state import ExtractedDocument  # noqa: E402
+from src.guardrails.input_validation import validate_application_input  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("riskpilot.app")
@@ -169,6 +176,7 @@ def underwrite_application(app_id: str):
 
     try:
         fast_mode = _str_field(data, "fast_mode", "false").lower() in ("true", "1", "yes")
+        start_time = time.time()
 
         apps = load_test_applications(TEST_DATA_PATH)
         app_data = next((a for a in apps if a.get("application_id") == app_id), None)
@@ -182,6 +190,13 @@ def underwrite_application(app_id: str):
         final_state_dict = graph.invoke(initial_state)
         serialized = serialize_state(final_state_dict)
 
+        # Artificial delay when fast mode is OFF — ensure minimum 5s elapsed
+        if not fast_mode:
+            elapsed = time.time() - start_time
+            remaining = 5.0 - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+
         # Protect the write to _PIPELINE_STATE with a per-app lock.
         lock = _app_locks[app_id]
         with lock:
@@ -191,6 +206,130 @@ def underwrite_application(app_id: str):
     except Exception as e:
         logger.error(f"Error executing underwrite for {app_id}: {e}", exc_info=True)
         return jsonify({"error": "Internal pipeline error. See server logs."}), 500
+
+
+@app.route("/api/underwrite/upload", methods=["POST"])
+@require_api_key
+def underwrite_upload():
+    """Accept uploaded documents + applicant data and run the full pipeline."""
+    try:
+        fast_mode = request.form.get("fast_mode", "false").lower() in ("true", "1", "yes")
+        start_time = time.time()
+
+        # Parse applicant data from form fields
+        try:
+            applicant_data = {
+                "name": request.form.get("name", "").strip(),
+                "income": float(request.form.get("income", 0)),
+                "monthly_debt": float(request.form.get("monthly_debt", 0)),
+                "loan_amount": float(request.form.get("loan_amount", 0)),
+                "property_value": float(request.form.get("property_value", 0)),
+                "employment_months": int(request.form.get("employment_months", 0)),
+            }
+            
+            # Validate that required fields are provided
+            if not applicant_data["name"]:
+                return jsonify({"error": "Applicant name is required"}), 400
+            if applicant_data["income"] <= 0:
+                return jsonify({"error": "Annual income must be greater than 0"}), 400
+            if applicant_data["loan_amount"] <= 0:
+                return jsonify({"error": "Loan amount must be greater than 0"}), 400
+            
+            logger.info(f"Applicant data parsed: name={applicant_data['name']}, income={applicant_data['income']}")
+        except (ValueError, TypeError) as e:
+            return jsonify({"error": f"Invalid applicant data: {str(e)}"}), 400
+
+        # Collect uploaded files
+        uploaded_files = request.files.getlist("documents")
+        logger.info(f"Received {len(uploaded_files)} files in upload request")
+        if not uploaded_files or len(uploaded_files) < 1:
+            return jsonify({"error": "No files uploaded."}), 400
+
+        # Create upload directory
+        app_id = f"UPLOAD-{uuid.uuid4().hex[:8].upper()}"
+        upload_subdir = os.path.join(UPLOAD_DIR, app_id)
+        os.makedirs(upload_subdir, exist_ok=True)
+
+        # Also accept explicit doc types from form
+        doc_types_raw = request.form.getlist("doc_types")
+
+        documents = []
+        for i, f in enumerate(uploaded_files):
+            if not f.filename:
+                logger.warning(f"Skipping file at index {i} - no filename")
+                continue
+
+            # Save file
+            safe_name = f"{i}_{f.filename}"
+            save_path = os.path.join(upload_subdir, safe_name)
+            logger.info(f"Saving file {i}: {f.filename} to {save_path}")
+            f.save(save_path)
+
+            # Determine doc type
+            if i < len(doc_types_raw) and doc_types_raw[i]:
+                doc_type = doc_types_raw[i]
+            else:
+                # Try to parse content for type detection
+                try:
+                    content = parse_document(save_path)
+                except Exception:
+                    content = ""
+                doc_type = detect_document_type(f.filename, content)
+
+            # Parse the document text
+            try:
+                extracted_text = parse_document(save_path)
+            except Exception as e:
+                extracted_text = f"Error parsing: {str(e)}"
+
+            documents.append(
+                ExtractedDocument(
+                    document_type=doc_type,
+                    extracted_text=extracted_text,
+                    validation_status="valid",
+                    confidence=0.85,
+                    extracted_fields={},
+                )
+            )
+
+        # Run input validation guardrails
+        is_valid, errors = validate_application_input(
+            applicant_data, [d.to_dict() for d in documents], app_id
+        )
+
+        # Build state and run pipeline
+        initial_state = LoanApplicationState(
+            application_id=app_id,
+            applicant_data=applicant_data,
+            documents=documents,
+        )
+
+        final_state_dict = graph.invoke(initial_state)
+        serialized = serialize_state(final_state_dict)
+
+        # Include guardrail validation results in response
+        serialized["guardrail_validation"] = {
+            "is_valid": is_valid,
+            "errors": errors,
+        }
+        serialized["application_id"] = app_id
+
+        # Artificial delay when fast mode is OFF
+        if not fast_mode:
+            elapsed = time.time() - start_time
+            remaining = 5.0 - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+
+        # Store result
+        lock = _app_locks[app_id]
+        with lock:
+            _PIPELINE_STATE[app_id] = serialized
+
+        return jsonify(serialized)
+    except Exception as e:
+        logger.error(f"Error processing upload: {e}", exc_info=True)
+        return jsonify({"error": f"Pipeline error: {str(e)}"}), 500
 
 
 @app.route("/api/decision/<app_id>", methods=["POST"])

@@ -15,6 +15,7 @@ __pycache__/
 # Vector store / data
 data/chroma_db/
 data/embeddings_cache/
+data/uploads/
 
 # Build outputs
 *.egg-info/
@@ -33,3 +34,5 @@ htmlcov/
 
 .agents
 skills-lock.json
+
+

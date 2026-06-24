@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>RiskPilot | Multi-Agent Underwriter</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <style>
         /* ============================================================
            DESIGN SYSTEM — Color Palette
@@ -18,11 +21,15 @@
            Border   : #2a2a2e  (Subtle line)
         ============================================================ */
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-        html, body {
+        html,
+        body {
             height: 100%;
-            overflow: hidden; /* Prevent body scroll — panels handle their own */
+            overflow: hidden;
+            /* Prevent body scroll — panels handle their own */
         }
 
         body {
@@ -30,18 +37,33 @@
             color: #e2e4e9;
             font-family: 'Inter', sans-serif;
         }
+
         .font-headline {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
+
         .font-mono-custom {
             font-family: 'JetBrains Mono', monospace;
         }
 
         /* ---- Scrollbar ---- */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #727781; }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #727781;
+        }
 
         /* ---- Layout Shell ---- */
         .app-shell {
@@ -50,29 +72,37 @@
             height: 100vh;
             overflow: hidden;
         }
+
         .app-header {
             flex-shrink: 0;
         }
+
         .app-workspace {
             flex: 1;
             display: flex;
-            overflow: hidden; /* children manage their own overflow */
-            min-height: 0;   /* critical for flex children to shrink */
+            overflow: hidden;
+            /* children manage their own overflow */
+            min-height: 0;
+            /* critical for flex children to shrink */
         }
+
         .sidebar-panel {
             width: 260px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* inner list scrolls */
+            overflow: hidden;
+            /* inner list scrolls */
             border-right: 1px solid #2a2a2e;
             background: #1c1c1e;
         }
+
         .sidebar-header {
             flex-shrink: 0;
             padding: 16px;
             border-bottom: 1px solid #2a2a2e;
         }
+
         .sidebar-list {
             flex: 1;
             overflow-y: auto;
@@ -81,12 +111,14 @@
             flex-direction: column;
             gap: 8px;
         }
+
         .main-panel {
             flex: 1;
             overflow-y: auto;
             background: #141414;
             min-width: 0;
         }
+
         .main-content {
             padding: 24px;
             max-width: 1200px;
@@ -115,14 +147,16 @@
             align-items: center;
             transition: border-color 0.18s ease, background 0.18s ease;
         }
+
         .app-card:hover {
             border-color: #334155;
             background: #2a2a30;
         }
+
         .app-card.active {
             background: rgba(51, 65, 85, 0.25);
             border-color: #334155;
-            box-shadow: 0 0 0 1px rgba(51,65,85,0.4) inset;
+            box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.4) inset;
         }
 
         /* ---- Status Badges ---- */
@@ -138,30 +172,35 @@
             border: 1px solid transparent;
             white-space: nowrap;
         }
+
         .badge-pending {
-            background: rgba(114,119,129,0.12);
+            background: rgba(114, 119, 129, 0.12);
             color: #9ca3af;
-            border-color: rgba(114,119,129,0.22);
+            border-color: rgba(114, 119, 129, 0.22);
         }
+
         .badge-review {
-            background: rgba(80,61,30,0.25);
+            background: rgba(80, 61, 30, 0.25);
             color: #c9a96e;
-            border-color: rgba(80,61,30,0.45);
+            border-color: rgba(80, 61, 30, 0.45);
         }
+
         .badge-approved {
-            background: rgba(52,211,153,0.1);
+            background: rgba(52, 211, 153, 0.1);
             color: #34d399;
-            border-color: rgba(52,211,153,0.22);
+            border-color: rgba(52, 211, 153, 0.22);
         }
+
         .badge-denied {
-            background: rgba(239,68,68,0.1);
+            background: rgba(239, 68, 68, 0.1);
             color: #f87171;
-            border-color: rgba(239,68,68,0.22);
+            border-color: rgba(239, 68, 68, 0.22);
         }
+
         .badge-idle {
-            background: rgba(114,119,129,0.06);
+            background: rgba(114, 119, 129, 0.06);
             color: #6b7280;
-            border-color: rgba(114,119,129,0.1);
+            border-color: rgba(114, 119, 129, 0.1);
         }
 
         /* ---- Info Cards (metric tiles) ---- */
@@ -175,9 +214,25 @@
             gap: 4px;
             transition: border-color 0.2s;
         }
-        .metric-card:hover { border-color: #334155; }
-        .metric-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.6px; color: #727781; font-weight: 600; }
-        .metric-value { font-size: 1.4rem; font-weight: 800; color: #e2e4e9; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .metric-card:hover {
+            border-color: #334155;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #727781;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #e2e4e9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
 
         /* ---- Section Cards ---- */
         .section-card {
@@ -186,15 +241,17 @@
             border-radius: 14px;
             padding: 20px;
         }
+
         .section-card-primary {
             background: #1c1c1e;
             border: 1.5px solid #334155;
             border-radius: 14px;
             padding: 20px;
         }
+
         .decision-card {
-            background: linear-gradient(135deg, rgba(51,65,85,0.12) 0%, rgba(28,28,30,0) 100%);
-            border: 1px solid rgba(51,65,85,0.4);
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.12) 0%, rgba(28, 28, 30, 0) 100%);
+            border: 1px solid rgba(51, 65, 85, 0.4);
             border-radius: 14px;
             padding: 20px;
         }
@@ -212,67 +269,78 @@
             transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: default;
         }
+
         .pipeline-node:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
             border-color: #334155;
         }
+
         .pipeline-node.node-active {
             border-color: #334155;
-            background: rgba(51,65,85,0.2);
+            background: rgba(51, 65, 85, 0.2);
             transform: scale(1.04);
-            box-shadow: 0 0 0 2px rgba(51,65,85,0.3), 0 8px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 2px rgba(51, 65, 85, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4);
         }
+
         .pipeline-node.node-passed {
-            border-color: rgba(52,211,153,0.4);
-            background: rgba(52,211,153,0.05);
+            border-color: rgba(52, 211, 153, 0.4);
+            background: rgba(52, 211, 153, 0.05);
         }
+
         .pipeline-node.node-failed {
-            border-color: rgba(239,68,68,0.4);
-            background: rgba(239,68,68,0.05);
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.05);
         }
 
         /* ---- Rationale panels ---- */
         .rationale-approve {
-            background: rgba(52,211,153,0.05);
-            border: 1px solid rgba(52,211,153,0.18);
+            background: rgba(52, 211, 153, 0.05);
+            border: 1px solid rgba(52, 211, 153, 0.18);
             border-radius: 12px;
             padding: 14px;
         }
+
         .rationale-deny {
-            background: rgba(239,68,68,0.05);
-            border: 1px solid rgba(239,68,68,0.18);
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.18);
             border-radius: 12px;
             padding: 14px;
         }
+
         .rationale-item {
             display: flex;
             align-items: flex-start;
             gap: 8px;
             padding: 5px 0;
             font-size: 0.78rem;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
-        .rationale-item:last-child { border-bottom: none; }
+
+        .rationale-item:last-child {
+            border-bottom: none;
+        }
 
         /* ---- Policy Chunks ---- */
         .policy-chunk-card {
-            background: rgba(51,65,85,0.08);
-            border: 1px solid rgba(51,65,85,0.22);
+            background: rgba(51, 65, 85, 0.08);
+            border: 1px solid rgba(51, 65, 85, 0.22);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 8px;
         }
+
         .policy-citation {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.62rem;
             color: #9baabf;
-            background: rgba(51,65,85,0.2);
+            background: rgba(51, 65, 85, 0.2);
             padding: 2px 7px;
             border-radius: 4px;
             display: inline-block;
             margin-bottom: 5px;
         }
+
         .policy-score {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.62rem;
@@ -283,7 +351,7 @@
         .btn-primary {
             background: #334155;
             color: #e2e4e9;
-            border: 1px solid rgba(51,65,85,0.6);
+            border: 1px solid rgba(51, 65, 85, 0.6);
             border-radius: 8px;
             padding: 8px 16px;
             font-size: 0.8rem;
@@ -295,14 +363,16 @@
             transition: all 0.18s ease;
             font-family: 'Inter', sans-serif;
         }
+
         .btn-primary:hover {
             background: #3d4e65;
             border-color: #4a5f78;
         }
+
         .btn-tertiary {
-            background: rgba(80,61,30,0.2);
+            background: rgba(80, 61, 30, 0.2);
             color: #c9a96e;
-            border: 1px solid rgba(80,61,30,0.4);
+            border: 1px solid rgba(80, 61, 30, 0.4);
             border-radius: 8px;
             padding: 8px 16px;
             font-size: 0.8rem;
@@ -314,10 +384,12 @@
             transition: all 0.18s ease;
             font-family: 'Inter', sans-serif;
         }
+
         .btn-tertiary:hover {
-            background: rgba(80,61,30,0.35);
-            border-color: rgba(80,61,30,0.7);
+            background: rgba(80, 61, 30, 0.35);
+            border-color: rgba(80, 61, 30, 0.7);
         }
+
         .btn-run {
             background: linear-gradient(135deg, #334155 0%, #3d4e65 100%);
             color: #fff;
@@ -332,13 +404,15 @@
             cursor: pointer;
             transition: all 0.18s ease;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            box-shadow: 0 2px 10px rgba(51,65,85,0.3);
+            box-shadow: 0 2px 10px rgba(51, 65, 85, 0.3);
         }
+
         .btn-run:hover {
             background: linear-gradient(135deg, #3d4e65 0%, #4a5f78 100%);
-            box-shadow: 0 4px 16px rgba(51,65,85,0.45);
+            box-shadow: 0 4px 16px rgba(51, 65, 85, 0.45);
             transform: translateY(-1px);
         }
+
         .btn-submit {
             background: #334155;
             color: #fff;
@@ -351,14 +425,19 @@
             transition: all 0.18s ease;
             width: 100%;
         }
-        .btn-submit:hover { background: #3d4e65; }
+
+        .btn-submit:hover {
+            background: #3d4e65;
+        }
 
         /* ---- Form elements ---- */
-        .form-input, .form-select, .form-textarea {
-            background: #141414;
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background: #ffffff;
             border: 1px solid #2a2a2e;
-            border-radius: 8px;
-            color: #e2e4e9;
+            border-radius: 12px;
+            color: #000000;
             font-size: 0.82rem;
             padding: 8px 12px;
             width: 100%;
@@ -366,11 +445,21 @@
             outline: none;
             transition: border-color 0.18s;
         }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
             border-color: #334155;
         }
-        .form-select option { background: #1c1c1e; }
-        .form-textarea { resize: none; }
+
+        .form-select option {
+            background: #1c1c1e;
+        }
+
+        .form-textarea {
+            resize: none;
+        }
+
         label.form-label {
             display: block;
             font-size: 0.7rem;
@@ -392,9 +481,11 @@
             text-align: center;
             padding: 32px;
         }
+
         .welcome-icon {
-            width: 80px; height: 80px;
-            background: rgba(51,65,85,0.2);
+            width: 80px;
+            height: 80px;
+            background: rgba(51, 65, 85, 0.2);
             border: 1px solid #334155;
             border-radius: 20px;
             display: flex;
@@ -408,8 +499,8 @@
             display: flex;
             align-items: flex-start;
             gap: 8px;
-            background: rgba(239,68,68,0.06);
-            border: 1px solid rgba(239,68,68,0.18);
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.18);
             border-radius: 8px;
             padding: 8px 12px;
             font-size: 0.78rem;
@@ -418,14 +509,217 @@
         }
 
         /* ---- Final status box ---- */
-        .final-approved { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.06); }
-        .final-denied   { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.06);  }
-        .final-review   { border-color: rgba(80,61,30,0.4);   background: rgba(80,61,30,0.06);   }
+        .final-approved {
+            border-color: rgba(52, 211, 153, 0.4);
+            background: rgba(52, 211, 153, 0.06);
+        }
+
+        .final-denied {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.06);
+        }
+
+        .final-review {
+            border-color: rgba(80, 61, 30, 0.4);
+            background: rgba(80, 61, 30, 0.06);
+        }
 
         /* ---- Expected recommendation badge ---- */
-        .rec-approve { background: rgba(52,211,153,0.08); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
-        .rec-deny    { background: rgba(239,68,68,0.08);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-        .rec-review  { background: rgba(80,61,30,0.15);   color: #c9a96e; border: 1px solid rgba(80,61,30,0.35); }
+        .rec-approve {
+            background: rgba(52, 211, 153, 0.08);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.2);
+        }
+
+        .rec-deny {
+            background: rgba(239, 68, 68, 0.08);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .rec-review {
+            background: rgba(80, 61, 30, 0.15);
+            color: #c9a96e;
+            border: 1px solid rgba(80, 61, 30, 0.35);
+        }
+
+        /* ---- Landing Screen ---- */
+        .landing-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: calc(100vh - 60px);
+            text-align: center;
+            padding: 40px 32px;
+        }
+
+        .landing-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 680px;
+            width: 100%;
+            margin-top: 32px;
+        }
+
+        .landing-option-card {
+            background: #1c1c1e;
+            border: 1.5px solid #2a2a2e;
+            border-radius: 16px;
+            padding: 32px 24px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .landing-option-card:hover {
+            border-color: #334155;
+            background: rgba(51, 65, 85, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .landing-option-card .option-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(51, 65, 85, 0.2);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ---- Upload Panel ---- */
+        .upload-panel {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .upload-section-card {
+            background: #1c1c1e;
+            border: 1px solid #2a2a2e;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .upload-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .doc-slot {
+            background: #242428;
+            border: 2px dashed #2a2a2e;
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .doc-slot:hover {
+            border-color: #334155;
+            background: #2a2a30;
+        }
+
+        .doc-slot.has-file {
+            border-color: rgba(52, 211, 153, 0.4);
+            border-style: solid;
+            background: rgba(52, 211, 153, 0.05);
+        }
+
+        .doc-slot input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .doc-slot-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(51, 65, 85, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+        }
+
+        .guardrail-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .guardrail-badge-warn {
+            background: rgba(80, 61, 30, 0.2);
+            color: #c9a96e;
+            border: 1px solid rgba(80, 61, 30, 0.4);
+        }
+
+        .guardrail-badge-ok {
+            background: rgba(52, 211, 153, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.25);
+        }
+
+        .guardrail-errors-box {
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        /* ---- Pulse animation ---- */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -434,18 +728,18 @@
                 extend: {
                     colors: {
                         brand: {
-                            bg:      "#141414",
+                            bg: "#141414",
                             surface: "#1c1c1e",
-                            card:    "#242428",
-                            border:  "#2a2a2e",
-                            text:    "#e2e4e9",
-                            primary:   "#334155",
+                            card: "#242428",
+                            border: "#2a2a2e",
+                            text: "#e2e4e9",
+                            primary: "#334155",
                             secondary: "#727781",
-                            tertiary:  "#503D1E",
-                            neutral:   "#777778",
+                            tertiary: "#503D1E",
+                            neutral: "#777778",
                             success: "#34d399",
                             warning: "#c9a96e",
-                            danger:  "#f87171"
+                            danger: "#f87171"
                         }
                     }
                 }
@@ -453,30 +747,43 @@
         }
     </script>
 </head>
+
 <body class="app-shell">
 
     <!-- ═══ HEADER ═══ -->
     <header class="app-header header-bar">
         <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:36px;height:36px;background:rgba(51,65,85,0.25);border:1px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center">
+            <div
+                style="width:36px;height:36px;background:rgba(51,65,85,0.25);border:1px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center">
                 <span class="material-symbols-outlined" style="color:#9baabf;font-size:20px">shield_with_heart</span>
             </div>
             <div>
-                <h1 class="font-headline" style="font-size:1.05rem;font-weight:800;color:#e2e4e9;line-height:1.2">RiskPilot Underwriter</h1>
-                <p style="font-size:0.68rem;color:#727781;margin-top:1px">Autonomous Multi-Agent Loan Risk Assessment</p>
+                <h1 class="font-headline" style="font-size:1.05rem;font-weight:800;color:#e2e4e9;line-height:1.2">
+                    RiskPilot Underwriter</h1>
+                <p style="font-size:0.68rem;color:#727781;margin-top:1px">Autonomous Multi-Agent Loan Risk Assessment
+                </p>
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;color:#9ca3af">
-                <input type="checkbox" id="fast-mode-toggle" checked style="accent-color:#334155;width:13px;height:13px">
+            <label
+                style="display:flex;align-items:center;gap:7px;cursor:pointer;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;color:#9ca3af">
+                <input type="checkbox" id="fast-mode-toggle" checked
+                    style="accent-color:#334155;width:13px;height:13px">
                 <span>Fast Offline Demo</span>
             </label>
-            <button id="reset-all-btn" onclick="resetAllProfiles()" class="btn-tertiary" style="padding:6px 12px;font-size:0.75rem">
+            <button onclick="showUploadPanel()" class="btn-primary" style="padding:6px 12px;font-size:0.75rem">
+                <span class="material-symbols-outlined" style="font-size:15px">upload_file</span>
+                <span>Upload PDF</span>
+            </button>
+            <button id="reset-all-btn" onclick="resetAllProfiles()" class="btn-tertiary"
+                style="padding:6px 12px;font-size:0.75rem">
                 <span class="material-symbols-outlined" style="font-size:15px">restart_alt</span>
                 <span>Reset All Profiles</span>
             </button>
-            <div style="display:flex;align-items:center;gap:7px;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px">
-                <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;animation:pulse 2s infinite"></span>
+            <div
+                style="display:flex;align-items:center;gap:7px;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px">
+                <span
+                    style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;animation:pulse 2s infinite"></span>
                 <span class="font-mono-custom" style="font-size:0.68rem;color:#727781">LangSmith Active</span>
             </div>
             <span class="font-mono-custom" style="font-size:0.68rem;color:#4a5568">v1.3.0</span>
@@ -489,7 +796,9 @@
         <!-- Sidebar -->
         <aside class="sidebar-panel">
             <div class="sidebar-header">
-                <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#727781;margin-bottom:4px">Loan Applications</div>
+                <div
+                    style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#727781;margin-bottom:4px">
+                    Loan Applications</div>
                 <div style="font-size:0.72rem;color:#4a5568">20 cases available</div>
             </div>
             <div id="applications-list" class="sidebar-list"></div>
@@ -498,37 +807,350 @@
         <!-- Main content panel -->
         <main class="main-panel">
 
-            <!-- Welcome screen (shown when no app selected) -->
-            <div id="welcome-message" class="welcome-screen">
+            <!-- Landing screen (shown when no app selected) -->
+            <div id="welcome-message" class="landing-screen">
                 <div class="welcome-icon">
                     <span class="material-symbols-outlined" style="font-size:38px;color:#9baabf">account_balance</span>
                 </div>
-                <h2 class="font-headline" style="font-size:1.4rem;font-weight:800;color:#e2e4e9;margin-bottom:10px">Select a Loan Application</h2>
-                <p style="color:#727781;max-width:380px;font-size:0.85rem;line-height:1.6">Choose a profile from the sidebar to inspect extracted documents, simulate the multi-agent underwriting pipeline, and record officer decisions.</p>
+                <h2 class="font-headline" style="font-size:1.6rem;font-weight:800;color:#e2e4e9;margin-bottom:8px">
+                    RiskPilot Underwriting Demo</h2>
+                <p style="color:#727781;max-width:460px;font-size:0.85rem;line-height:1.6;margin-bottom:8px">Simulate
+                    the multi-agent loan underwriting pipeline with mock data or upload your own documents to test real
+                    document parsing and guardrails.</p>
+
+                <div class="landing-cards">
+                    <!-- Option 1: Demo Applications -->
+                    <div class="landing-option-card" onclick="focusSidebar()">
+                        <div class="option-icon">
+                            <span class="material-symbols-outlined"
+                                style="font-size:28px;color:#9baabf">folder_open</span>
+                        </div>
+                        <div>
+                            <div class="font-headline"
+                                style="font-size:0.95rem;font-weight:700;color:#e2e4e9;margin-bottom:4px">Demo
+                                Applications</div>
+                            <div style="font-size:0.75rem;color:#727781;line-height:1.5">Browse 20 pre-built test cases
+                                from the sidebar. Includes approve, deny, and edge-case scenarios.</div>
+                        </div>
+                        <span class="status-badge badge-pending" style="font-size:0.6rem">20 CASES</span>
+                    </div>
+
+                    <!-- Option 2: Upload Your Own -->
+                    <div class="landing-option-card" onclick="showUploadPanel()">
+                        <div class="option-icon">
+                            <span class="material-symbols-outlined"
+                                style="font-size:28px;color:#9baabf">upload_file</span>
+                        </div>
+                        <div>
+                            <div class="font-headline"
+                                style="font-size:0.95rem;font-weight:700;color:#e2e4e9;margin-bottom:4px">Upload Your
+                                Own</div>
+                            <div style="font-size:0.75rem;color:#727781;line-height:1.5">Upload real PDF/image documents
+                                to test the full parsing pipeline and guardrail validation.</div>
+                        </div>
+                        <span class="guardrail-badge guardrail-badge-warn"><span class="material-symbols-outlined"
+                                style="font-size:13px">verified_user</span> Min. 3 Docs Required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Panel (hidden by default) -->
+            <div id="upload-panel" class="hidden upload-panel" style="padding-top:20px;padding-bottom:40px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <div>
+                        <h2 class="font-headline" style="font-size:1.3rem;font-weight:800;color:#e2e4e9">Upload
+                            Documents for Underwriting</h2>
+                        <p style="font-size:0.78rem;color:#727781;margin-top:4px">Fill in applicant details and upload
+                            at least 3 documents to run the full pipeline.</p>
+                    </div>
+                    <button onclick="hideUploadPanel()" class="btn-tertiary" style="padding:6px 12px;font-size:0.75rem">
+                        <span class="material-symbols-outlined" style="font-size:15px">arrow_back</span>
+                        <span>Back</span>
+                    </button>
+                </div>
+
+                <!-- Applicant Details Form -->
+                <div class="upload-section-card">
+                    <h3 class="font-headline"
+                        style="font-size:0.9rem;font-weight:700;color:#e2e4e9;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                        <span class="material-symbols-outlined" style="font-size:18px;color:#727781">person</span>
+                        Applicant Information
+                    </h3>
+                    <div class="upload-grid">
+                        <div>
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="upload-name" class="form-input" placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label class="form-label">Annual Income ($)</label>
+                            <input type="number" id="upload-income" class="form-input" placeholder="80000">
+                        </div>
+                        <div>
+                            <label class="form-label">Monthly Debt ($)</label>
+                            <input type="number" id="upload-debt" class="form-input" placeholder="1200">
+                        </div>
+                        <div>
+                            <label class="form-label">Loan Amount ($)</label>
+                            <input type="number" id="upload-loan" class="form-input" placeholder="200000">
+                        </div>
+                        <div>
+                            <label class="form-label">Property Value ($)</label>
+                            <input type="number" id="upload-property" class="form-input" placeholder="280000">
+                        </div>
+                        <div>
+                            <label class="form-label">Employment (months)</label>
+                            <input type="number" id="upload-employment" class="form-input" placeholder="36">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Upload Slots -->
+                <div class="upload-section-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h3 class="font-headline"
+                            style="font-size:0.9rem;font-weight:700;color:#e2e4e9;display:flex;align-items:center;gap:8px">
+                            <span class="material-symbols-outlined"
+                                style="font-size:18px;color:#727781">description</span>
+                            Upload Documents
+                        </h3>
+                        <div id="doc-count-badge" class="guardrail-badge guardrail-badge-warn">
+                            <span class="material-symbols-outlined" style="font-size:13px">warning</span>
+                            <span id="doc-count-text">0 / 3 minimum</span>
+                        </div>
+                    </div>
+                    <div
+                        style="font-size:0.72rem;color:#727781;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+                        <span class="material-symbols-outlined" style="font-size:14px">info</span>
+                        Accepted formats: PDF, JPG, PNG (max 10MB each). Minimum 3 documents required by KYC guardrails.
+                    </div>
+                    <div class="upload-grid-4">
+                        <!-- Slot 1: ID Proof (Required) -->
+                        <div class="doc-slot" id="slot-id_proof">
+                            <input type="file" id="file-id_proof" accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="onFileSelected('id_proof', this)" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                            <div class="doc-slot-icon">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:20px;color:#727781">badge</span>
+                            </div>
+                            <div class="font-headline" style="font-size:0.78rem;font-weight:700;color:#e2e4e9">ID Proof
+                            </div>
+                            <div style="font-size:0.65rem;color:#727781;margin-top:4px">Required</div>
+                            <div id="file-name-id_proof"
+                                style="font-size:0.62rem;color:#34d399;margin-top:6px;word-break:break-all"></div>
+                        </div>
+
+                        <!-- Slot 2: Bank Statement (Required) -->
+                        <div class="doc-slot" id="slot-bank_statement">
+                            <input type="file" id="file-bank_statement" accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="onFileSelected('bank_statement', this)" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                            <div class="doc-slot-icon">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:20px;color:#727781">account_balance</span>
+                            </div>
+                            <div class="font-headline" style="font-size:0.78rem;font-weight:700;color:#e2e4e9">Bank
+                            Statement</div>
+                            <div style="font-size:0.65rem;color:#727781;margin-top:4px">Required</div>
+                            <div id="file-name-bank_statement"
+                                style="font-size:0.62rem;color:#34d399;margin-top:6px;word-break:break-all"></div>
+                        </div>
+
+                        <!-- Slot 3: Pay Slip (Required) -->
+                        <div class="doc-slot" id="slot-pay_slip">
+                            <input type="file" id="file-pay_slip" accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="onFileSelected('pay_slip', this)" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                            <div class="doc-slot-icon">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:20px;color:#727781">payments</span>
+                            </div>
+                            <div class="font-headline" style="font-size:0.78rem;font-weight:700;color:#e2e4e9">Pay Slip
+                            </div>
+                            <div style="font-size:0.65rem;color:#727781;margin-top:4px">Required</div>
+                            <div id="file-name-pay_slip"
+                                style="font-size:0.62rem;color:#34d399;margin-top:6px;word-break:break-all"></div>
+                        </div>
+
+                        <!-- Slot 4: Employment Letter (Optional) -->
+                        <div class="doc-slot" id="slot-employment_letter">
+                            <input type="file" id="file-employment_letter" accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="onFileSelected('employment_letter', this)" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                            <div class="doc-slot-icon">
+                                <span class="material-symbols-outlined" style="font-size:20px;color:#727781">work</span>
+                            </div>
+                            <div class="font-headline" style="font-size:0.78rem;font-weight:700;color:#e2e4e9">
+                                Employment Letter</div>
+                            <div style="font-size:0.65rem;color:#727781;margin-top:4px">Optional</div>
+                            <div id="file-name-employment_letter"
+                                style="font-size:0.62rem;color:#34d399;margin-top:6px;word-break:break-all"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Controls for Upload -->
+                <div class="upload-section-card" style="border-color:#334155">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <h3 class="font-headline"
+                                style="font-size:0.9rem;font-weight:700;color:#e2e4e9;display:flex;align-items:center;gap:8px">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:18px;color:#727781">play_circle</span>
+                                Run Multi-Agent Pipeline
+                            </h3>
+                            <p id="upload-guardrail-msg" style="font-size:0.72rem;color:#c9a96e;margin-top:4px">⚠ Upload
+                                at least 3 documents to enable pipeline execution.</p>
+                        </div>
+                        <button id="upload-run-btn" onclick="runUploadPipeline()" class="btn-run" disabled
+                            style="opacity:0.4;cursor:not-allowed">
+                            <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
+                            <span>Run Assessment</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload Pipeline Nodes -->
+                <div id="upload-pipeline-section" class="hidden">
+                    <div class="upload-section-card" style="margin-bottom:16px">
+                        <h3 class="font-headline"
+                            style="font-size:0.9rem;font-weight:700;color:#e2e4e9;margin-bottom:16px">Agent Pipeline
+                            Progress</h3>
+                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+                            <div id="upload-node-kyc" class="pipeline-node">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:22px;color:#727781;margin-bottom:8px">description</span>
+                                <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">KYC
+                                    Agent</div>
+                                <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
+                            </div>
+                            <div id="upload-node-credit" class="pipeline-node">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:22px;color:#727781;margin-bottom:8px">monitoring</span>
+                                <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">
+                                    Credit Agent</div>
+                                <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
+                            </div>
+                            <div id="upload-node-policy" class="pipeline-node">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:22px;color:#727781;margin-bottom:8px">gavel</span>
+                                <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">
+                                    Policy Agent</div>
+                                <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
+                            </div>
+                            <div id="upload-node-arbitrator" class="pipeline-node">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:22px;color:#727781;margin-bottom:8px">balance</span>
+                                <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">
+                                    Arbitrator</div>
+                                <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
+                            </div>
+                            <div id="upload-node-decision" class="pipeline-node">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:22px;color:#727781;margin-bottom:8px">assignment_ind</span>
+                                <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">HITL
+                                    Review</div>
+                                <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guardrail Validation Results -->
+                    <div id="upload-guardrail-results" class="hidden upload-section-card">
+                        <h3 class="font-headline"
+                            style="font-size:0.9rem;font-weight:700;color:#e2e4e9;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+                            <span class="material-symbols-outlined"
+                                style="font-size:18px;color:#c9a96e">verified_user</span>
+                            Input Guardrail Validation
+                        </h3>
+                        <div id="upload-guardrail-content"></div>
+                    </div>
+
+                    <!-- Upload Results (reuse same result structure) -->
+                    <div id="upload-results" class="hidden space-y-6"></div>
+
+                    <!-- Upload Officer Decision Panel -->
+                    <div id="upload-decision-panel" class="hidden decision-panel p-5 rounded-xl border space-y-4 mt-6">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">assignment_turned_in</span>
+                            <span>Lending Officer Manual Decision (HITL)</span>
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Officer ID</label>
+                                <input type="text" id="upload-officer-id" value="OFFICER-01"
+                                    class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0" />
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Decision</label>
+                                <select id="upload-officer-decision"
+                                    class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0">
+                                    <option value="approve">Approve Recommendation</option>
+                                    <option value="deny">Deny Recommendation</option>
+                                    <option value="override_approve">Override Approve (Force Exception)</option>
+                                    <option value="override_deny">Override Deny (Reject Manually)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button id="submit-upload-decision-btn" onclick="submitUploadDecision()"
+                                    class="w-full bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm py-2 rounded-lg transition">
+                                    Submit Final Decision
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Override / Decision Justification Notes</label>
+                            <textarea id="upload-officer-reason" rows="2"
+                                placeholder="Describe rationale or policy exception justification..."
+                                class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Upload Final Status -->
+                    <div id="upload-final-status-container" class="hidden mt-6 p-5 rounded-xl border border-brand-success bg-brand-success/5 text-center space-y-2">
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Final Underwritten Application Status</div>
+                        <div id="upload-final-status-value" class="text-3xl font-headline font-bold uppercase text-brand-success">---</div>
+                    </div>
+                </div>
             </div>
 
             <div id="application-details" class="hidden main-content" style="padding-top:20px;padding-bottom:40px">
                 <!-- Profile Header -->
-                <div class="section-card" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+                <div class="section-card"
+                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
                     <div>
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-                            <h2 id="app-name" class="font-headline" style="font-size:1.3rem;font-weight:800;color:#e2e4e9">---</h2>
-                            <span id="app-id" class="font-mono-custom" style="font-size:0.68rem;background:#242428;border:1px solid #334155;padding:2px 8px;border-radius:5px;color:#9baabf">---</span>
+                            <h2 id="app-name" class="font-headline"
+                                style="font-size:1.3rem;font-weight:800;color:#e2e4e9">---</h2>
+                            <span id="app-id" class="font-mono-custom"
+                                style="font-size:0.68rem;background:#242428;border:1px solid #334155;padding:2px 8px;border-radius:5px;color:#9baabf">---</span>
                         </div>
                         <p id="app-desc" style="font-size:0.8rem;color:#727781">---</p>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-size:0.62rem;color:#727781;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Expected</div>
-                        <div id="expected-recommendation" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;padding:4px 12px;border-radius:20px">---</div>
+                        <div
+                            style="font-size:0.62rem;color:#727781;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">
+                            Expected</div>
+                        <div id="expected-recommendation"
+                            style="font-size:0.72rem;font-weight:700;text-transform:uppercase;padding:4px 12px;border-radius:20px">
+                            ---</div>
                     </div>
                 </div>
 
                 <!-- Core Details Grid -->
                 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-                    <div class="metric-card"><div class="metric-label">Annual Income</div><div id="detail-income" class="metric-value">---</div></div>
-                    <div class="metric-card"><div class="metric-label">Monthly Debt</div><div id="detail-debt" class="metric-value">---</div></div>
-                    <div class="metric-card"><div class="metric-label">Loan Requested</div><div id="detail-loan" class="metric-value">---</div></div>
-                    <div class="metric-card"><div class="metric-label">Employment</div><div id="detail-employment" class="metric-value">---</div></div>
+                    <div class="metric-card">
+                        <div class="metric-label">Annual Income</div>
+                        <div id="detail-income" class="metric-value">---</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Monthly Debt</div>
+                        <div id="detail-debt" class="metric-value">---</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Loan Requested</div>
+                        <div id="detail-loan" class="metric-value">---</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Employment</div>
+                        <div id="detail-employment" class="metric-value">---</div>
+                    </div>
                 </div>
 
 
@@ -537,8 +1159,10 @@
                 <div class="section-card" style="margin-bottom:16px">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
                         <div>
-                            <h3 class="font-headline" style="font-size:0.95rem;font-weight:700;color:#e2e4e9">Agent Pipeline</h3>
-                            <p style="font-size:0.72rem;color:#727781;margin-top:2px">Orchestrated multi-agent underwriting process</p>
+                            <h3 class="font-headline" style="font-size:0.95rem;font-weight:700;color:#e2e4e9">Agent
+                                Pipeline</h3>
+                            <p style="font-size:0.72rem;color:#727781;margin-top:2px">Orchestrated multi-agent
+                                underwriting process</p>
                         </div>
                         <button id="run-pipeline-btn" onclick="runPipeline()" class="btn-run">
                             <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
@@ -549,32 +1173,42 @@
                     <!-- Visual Nodes -->
                     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
                         <div id="node-kyc" class="pipeline-node">
-                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">description</span>
-                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">KYC Agent</div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:22px;color:#727781;margin-bottom:8px">description</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">KYC Agent
+                            </div>
                             <div style="font-size:0.62rem;color:#727781;margin-top:2px">Parser & Identity</div>
                             <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
                         <div id="node-credit" class="pipeline-node">
-                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">monitoring</span>
-                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Credit Agent</div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:22px;color:#727781;margin-bottom:8px">monitoring</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Credit
+                                Agent</div>
                             <div style="font-size:0.62rem;color:#727781;margin-top:2px">DTI & Scoring</div>
                             <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
                         <div id="node-policy" class="pipeline-node">
-                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">gavel</span>
-                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Policy Agent</div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:22px;color:#727781;margin-bottom:8px">gavel</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Policy
+                                Agent</div>
                             <div style="font-size:0.62rem;color:#727781;margin-top:2px">RAG Compliance</div>
                             <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
                         <div id="node-arbitrator" class="pipeline-node">
-                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">balance</span>
-                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Arbitrator</div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:22px;color:#727781;margin-bottom:8px">balance</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">
+                                Arbitrator</div>
                             <div style="font-size:0.62rem;color:#727781;margin-top:2px">Weighted Vote</div>
                             <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
                         <div id="node-decision" class="pipeline-node">
-                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">assignment_ind</span>
-                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">HITL Review</div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:22px;color:#727781;margin-bottom:8px">assignment_ind</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">HITL
+                                Review</div>
                             <div style="font-size:0.62rem;color:#727781;margin-top:2px">Manual Override</div>
                             <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
@@ -588,10 +1222,12 @@
                         <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-4">
                             <div class="flex justify-between items-center">
                                 <h4 class="font-headline font-bold text-white flex items-center space-x-2">
-                                    <span class="material-symbols-outlined text-brand-primary text-xl">verified_user</span>
+                                    <span
+                                        class="material-symbols-outlined text-brand-primary text-xl">verified_user</span>
                                     <span>KYC assessment</span>
                                 </h4>
-                                <span id="kyc-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                                <span id="kyc-badge"
+                                    class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
                             </div>
                             <div class="grid grid-cols-2 gap-3 text-sm">
                                 <div class="bg-brand-bg/40 p-3 rounded-lg">
@@ -611,7 +1247,8 @@
                                     <div id="kyc-confidence" class="font-semibold text-white mt-1">---</div>
                                 </div>
                             </div>
-                            <div id="kyc-fraud-alert" class="hidden p-3 rounded-lg border border-brand-danger bg-brand-danger/10 text-brand-danger text-xs flex items-center space-x-2">
+                            <div id="kyc-fraud-alert"
+                                class="hidden p-3 rounded-lg border border-brand-danger bg-brand-danger/10 text-brand-danger text-xs flex items-center space-x-2">
                                 <span class="material-symbols-outlined text-sm">warning</span>
                                 <span class="font-semibold">Inconsistency/Fraud Alert Triggered</span>
                             </div>
@@ -624,27 +1261,33 @@
                                     <span class="material-symbols-outlined text-brand-primary text-xl">analytics</span>
                                     <span>Credit Risk scoring</span>
                                 </h4>
-                                <span id="credit-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                                <span id="credit-badge"
+                                    class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
                             </div>
                             <div class="grid grid-cols-2 gap-3 text-sm">
                                 <div class="bg-brand-bg/40 p-3 rounded-lg">
                                     <div class="text-xs text-slate-400">Computed Credit Score</div>
-                                    <div id="credit-score" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                    <div id="credit-score" class="font-mono-custom font-semibold text-white mt-1">---
+                                    </div>
                                 </div>
                                 <div class="bg-brand-bg/40 p-3 rounded-lg">
                                     <div class="text-xs text-slate-400">Default Probability</div>
-                                    <div id="credit-default" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                    <div id="credit-default" class="font-mono-custom font-semibold text-white mt-1">---
+                                    </div>
                                 </div>
                                 <div class="bg-brand-bg/40 p-3 rounded-lg">
                                     <div class="text-xs text-slate-400">Final DTI Ratio</div>
-                                    <div id="credit-dti" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                    <div id="credit-dti" class="font-mono-custom font-semibold text-white mt-1">---
+                                    </div>
                                 </div>
                                 <div class="bg-brand-bg/40 p-3 rounded-lg">
                                     <div class="text-xs text-slate-400">Scoring Confidence</div>
-                                    <div id="credit-confidence" class="font-mono-custom font-semibold text-white mt-1">---</div>
+                                    <div id="credit-confidence" class="font-mono-custom font-semibold text-white mt-1">
+                                        ---</div>
                                 </div>
                             </div>
-                            <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                            <div
+                                class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
                                 <span class="font-semibold">Agent Reasoning: </span><span id="credit-reason">---</span>
                             </div>
                         </div>
@@ -657,7 +1300,8 @@
                                 <span class="material-symbols-outlined text-brand-primary text-xl">library_books</span>
                                 <span>Policy compliance check</span>
                             </h4>
-                            <span id="policy-badge" class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
+                            <span id="policy-badge"
+                                class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase">Pending</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div class="bg-brand-bg/40 p-3 rounded-lg">
@@ -675,7 +1319,8 @@
                         </div>
 
                         <!-- Policy Agent Reasoning -->
-                        <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                        <div
+                            class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
                             <span class="font-semibold">Policy Reasoning: </span><span id="policy-reason">---</span>
                         </div>
 
@@ -708,17 +1353,22 @@
                         <div class="rationale-approve rounded-xl p-4 space-y-2">
                             <div class="flex items-center space-x-2 mb-2">
                                 <span class="material-symbols-outlined text-brand-success text-lg">check_circle</span>
-                                <span class="text-xs font-headline font-bold text-brand-success uppercase tracking-wider">Factors Supporting Approval</span>
+                                <span
+                                    class="text-xs font-headline font-bold text-brand-success uppercase tracking-wider">Factors
+                                    Supporting Approval</span>
                             </div>
                             <div id="approve-reasons-list" class="space-y-1">
-                                <div class="text-xs text-slate-500 italic">No strong approve signals for this case.</div>
+                                <div class="text-xs text-slate-500 italic">No strong approve signals for this case.
+                                </div>
                             </div>
                         </div>
                         <!-- Deny Reasons -->
                         <div class="rationale-deny rounded-xl p-4 space-y-2">
                             <div class="flex items-center space-x-2 mb-2">
                                 <span class="material-symbols-outlined text-brand-danger text-lg">cancel</span>
-                                <span class="text-xs font-headline font-bold text-brand-danger uppercase tracking-wider">Factors Supporting Denial</span>
+                                <span
+                                    class="text-xs font-headline font-bold text-brand-danger uppercase tracking-wider">Factors
+                                    Supporting Denial</span>
                             </div>
                             <div id="deny-reasons-list" class="space-y-1">
                                 <div class="text-xs text-slate-500 italic">No policy violations anticipated.</div>
@@ -738,7 +1388,8 @@
                                     <div class="text-[10px] text-slate-400">Agreement Level</div>
                                     <div id="arbitrator-agreement" class="text-xs font-semibold text-white">---</div>
                                 </div>
-                                <span id="arbitrator-badge" class="text-sm px-3.5 py-1.5 rounded-full font-bold uppercase">Pending</span>
+                                <span id="arbitrator-badge"
+                                    class="text-sm px-3.5 py-1.5 rounded-full font-bold uppercase">Pending</span>
                             </div>
                         </div>
 
@@ -749,11 +1400,13 @@
                             </div>
                             <div class="bg-brand-bg/40 p-3 rounded-lg">
                                 <div class="text-xs text-slate-400">Decision Confidence</div>
-                                <div id="arbitrator-confidence" class="font-mono-custom text-xl font-bold text-white mt-1">---</div>
+                                <div id="arbitrator-confidence"
+                                    class="font-mono-custom text-xl font-bold text-white mt-1">---</div>
                             </div>
                         </div>
 
-                        <div id="arbitrator-flags-container" class="hidden p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-brand-warning text-xs space-y-1">
+                        <div id="arbitrator-flags-container"
+                            class="hidden p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-brand-warning text-xs space-y-1">
                             <div class="font-semibold flex items-center space-x-1">
                                 <span class="material-symbols-outlined text-sm">warning</span>
                                 <span>Active Underwriter Risk Flags:</span>
@@ -767,18 +1420,21 @@
                     <!-- Officer Decision Panel -->
                     <div id="decision-panel" class="decision-panel p-5 rounded-xl border space-y-4">
                         <h4 class="font-headline font-bold text-white flex items-center space-x-2">
-                            <span class="material-symbols-outlined text-brand-primary text-xl">assignment_turned_in</span>
+                            <span
+                                class="material-symbols-outlined text-brand-primary text-xl">assignment_turned_in</span>
                             <span>Lending Officer Manual Decision (HITL)</span>
                         </h4>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Officer ID</label>
-                                <input type="text" id="officer-id" value="OFFICER-01" class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"/>
+                                <input type="text" id="officer-id" value="OFFICER-01"
+                                    class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0" />
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Decision</label>
-                                <select id="officer-decision" class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0">
+                                <select id="officer-decision"
+                                    class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0">
                                     <option value="approve">Approve Recommendation</option>
                                     <option value="deny">Deny Recommendation</option>
                                     <option value="override_approve">Override Approve (Force Exception)</option>
@@ -786,24 +1442,31 @@
                                 </select>
                             </div>
                             <div class="flex items-end">
-                                <button id="submit-decision-btn" onclick="submitDecision()" class="w-full bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm py-2 rounded-lg transition">
+                                <button id="submit-decision-btn" onclick="submitDecision()"
+                                    class="w-full bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm py-2 rounded-lg transition">
                                     Submit Final Decision
                                 </button>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Override / Decision Justification Notes</label>
-                            <textarea id="officer-reason" rows="2" placeholder="Describe rationale or policy exception justification..." class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"></textarea>
+                            <label class="block text-xs text-slate-400 mb-1">Override / Decision Justification
+                                Notes</label>
+                            <textarea id="officer-reason" rows="2"
+                                placeholder="Describe rationale or policy exception justification..."
+                                class="w-full bg-brand-bg/60 border border-brand-border rounded-lg text-sm text-white focus:border-brand-primary focus:ring-0"></textarea>
                         </div>
                     </div>
 
                     <!-- Final Output Status -->
-                    <div id="final-status-container" class="hidden p-5 rounded-xl border border-brand-success bg-brand-success/5 text-center space-y-2">
-                        <div class="text-xs text-slate-400 uppercase font-semibold">Final Underwritten Application Status</div>
-                        <div id="final-status-value" class="text-3xl font-headline font-bold uppercase text-brand-success">---</div>
+                    <div id="final-status-container"
+                        class="hidden p-5 rounded-xl border border-brand-success bg-brand-success/5 text-center space-y-2">
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Final Underwritten Application
+                            Status</div>
+                        <div id="final-status-value"
+                            class="text-3xl font-headline font-bold uppercase text-brand-success">---</div>
                     </div>
-            </div>
+                </div>
 
         </main>
 
@@ -822,7 +1485,7 @@
                 const response = await fetch('/api/applications');
                 const apps = await response.json();
                 allApps = apps;
-                
+
                 // Initialize statuses if not set
                 apps.forEach(app => {
                     if (!appStatuses[app.application_id]) {
@@ -842,10 +1505,10 @@
             apps.forEach(app => {
                 const isSelected = currentApp && currentApp.application_id === app.application_id;
                 const status = appStatuses[app.application_id] || 'new';
-                
+
                 let statusLabel = 'REVIEW PENDING';
                 let badgeClass = 'badge-pending';
-                
+
                 if (status === 'approved') {
                     statusLabel = 'APPROVED';
                     badgeClass = 'badge-approved';
@@ -856,7 +1519,7 @@
                     statusLabel = 'REVIEW';
                     badgeClass = 'badge-review';
                 }
-                              
+
                 const card = document.createElement('div');
                 card.className = `app-card${isSelected ? ' active' : ''}`;
                 card.onclick = () => selectApplication(app);
@@ -873,13 +1536,14 @@
 
         function selectApplication(app) {
             currentApp = app;
-            
+
             // Re-render apps list to show active card styling
             renderApplications(allApps);
 
-            // Hide welcome
+            // Hide welcome and upload panel
             document.getElementById('welcome-message').classList.add('hidden');
-            
+            document.getElementById('upload-panel').classList.add('hidden');
+
             // Show details
             const details = document.getElementById('application-details');
             details.classList.remove('hidden');
@@ -892,8 +1556,8 @@
             const recEl = document.getElementById('expected-recommendation');
             recEl.innerText = expectedRec.replace('_', ' ').toUpperCase();
             recEl.className = expectedRec === 'approve' ? 'rec-approve'
-                            : expectedRec === 'deny' ? 'rec-deny'
-                            : 'rec-review';
+                : expectedRec === 'deny' ? 'rec-deny'
+                    : 'rec-review';
 
             // Details
             document.getElementById('detail-income').innerText = `$${app.applicant_data.income.toLocaleString()}`;
@@ -992,11 +1656,11 @@
             document.getElementById('pipeline-results').classList.add('hidden');
             document.getElementById('final-status-container').classList.add('hidden');
             document.getElementById('decision-panel').classList.remove('hidden');
-            
+
             // Reset decision form inputs
             document.getElementById('officer-id').value = 'OFFICER-01';
             document.getElementById('officer-reason').value = '';
-            
+
             // Reset decision select based on recommendation
             if (currentApp) {
                 if (currentApp.expected_recommendation === 'approve') {
@@ -1016,7 +1680,7 @@
             document.getElementById('kyc-employer').innerText = '---';
             document.getElementById('kyc-confidence').innerText = '---';
             document.getElementById('kyc-fraud-alert').classList.add('hidden');
-            
+
             document.getElementById('credit-badge').className = 'status-badge badge-pending';
             document.getElementById('credit-badge').innerText = 'Pending';
             document.getElementById('credit-score').innerText = '---';
@@ -1024,7 +1688,7 @@
             document.getElementById('credit-dti').innerText = '---';
             document.getElementById('credit-confidence').innerText = '---';
             document.getElementById('credit-reason').innerText = '---';
-            
+
             document.getElementById('policy-badge').className = 'status-badge badge-pending';
             document.getElementById('policy-badge').innerText = 'Pending';
             document.getElementById('policy-ltv').innerText = '---';
@@ -1033,7 +1697,7 @@
             document.getElementById('policy-violations-container').classList.add('hidden');
             document.getElementById('policy-violations-list').innerHTML = '';
             document.getElementById('policy-chunks').innerHTML = '';
-            
+
             document.getElementById('arbitrator-badge').className = 'status-badge badge-pending';
             document.getElementById('arbitrator-badge').innerText = 'Pending';
             document.getElementById('arbitrator-agreement').innerText = '---';
@@ -1080,14 +1744,26 @@
             document.getElementById('pipeline-results').classList.add('hidden');
 
             const fastMode = document.getElementById('fast-mode-toggle').checked;
-            const delay = fastMode ? 50 : 300;
+            // When fast mode is OFF, use 1200ms per node for visible ~6s delay
+            const delay = fastMode ? 50 : 1200;
 
             const steps = ['kyc', 'credit', 'policy', 'arbitrator'];
-            
+            const startTime = Date.now();
+
             // Visual delay simulation to show agent-by-agent processing
             for (let i = 0; i < steps.length; i++) {
                 setNodeState(steps[i], 'active');
                 await new Promise(r => setTimeout(r, delay));
+                // Mark previous nodes as passed during animation
+                if (i > 0 && !fastMode) {
+                    setNodeState(steps[i - 1], 'passed');
+                }
+            }
+
+            // If slow mode, also animate decision node
+            if (!fastMode) {
+                setNodeState('decision', 'active');
+                await new Promise(r => setTimeout(r, 800));
             }
 
             try {
@@ -1154,8 +1830,8 @@
             if (creditOut) {
                 const creditBadge = document.getElementById('credit-badge');
                 const badgeStyle = creditOut.risk_category === 'low' ? 'badge-approved'
-                                   : creditOut.risk_category === 'medium' ? 'badge-review'
-                                   : 'badge-denied';
+                    : creditOut.risk_category === 'medium' ? 'badge-review'
+                        : 'badge-denied';
                 creditBadge.className = `status-badge ${badgeStyle}`;
                 creditBadge.innerText = creditOut.risk_category;
 
@@ -1213,7 +1889,7 @@
                             if (parsed.score !== undefined) {
                                 scoreText = `${(parsed.score * 100).toFixed(1)}% similarity`;
                             }
-                        } catch(e) {
+                        } catch (e) {
                             // Fallback: plain string
                             chunkText = String(chunkRaw);
                         }
@@ -1244,8 +1920,8 @@
             if (arbOut) {
                 const arbBadge = document.getElementById('arbitrator-badge');
                 const badgeStyle = arbOut.recommendation === 'approve' ? 'badge-approved'
-                                   : arbOut.recommendation === 'deny' ? 'badge-denied'
-                                   : 'badge-review';
+                    : arbOut.recommendation === 'deny' ? 'badge-denied'
+                        : 'badge-review';
                 arbBadge.className = `status-badge ${badgeStyle}`;
                 arbBadge.innerText = arbOut.recommendation;
 
@@ -1309,12 +1985,12 @@
 
                 // Persist the decision result
                 appDecisions[currentApp.application_id] = result;
-                
+
                 // Show final status
                 const finalStatusContainer = document.getElementById('final-status-container');
                 const finalStatusVal = document.getElementById('final-status-value');
                 finalStatusContainer.classList.remove('hidden');
-                
+
                 if (result.final_status === 'approved') {
                     appStatuses[currentApp.application_id] = 'approved';
                     finalStatusVal.className = "font-headline font-bold uppercase";
@@ -1340,7 +2016,7 @@
 
                 // Re-render apps list to show updated status live in the sidebar
                 renderApplications(allApps);
-                
+
                 // Smooth scroll to final status
                 finalStatusContainer.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
@@ -1369,8 +2045,455 @@
             renderApplications(allApps);
         }
 
+        // ============================================================
+        // Upload Panel Functions
+        // ============================================================
+
+        let uploadFiles = {}; // keyed by doc_type
+        let currentUploadAppId = null;
+
+        function showUploadPanel() {
+            document.getElementById('welcome-message').classList.add('hidden');
+            document.getElementById('application-details').classList.add('hidden');
+            document.getElementById('upload-panel').classList.remove('hidden');
+            document.getElementById('upload-panel').classList.add('animate-slide-up');
+            currentApp = null;
+            renderApplications(allApps);
+        }
+
+        function hideUploadPanel() {
+            document.getElementById('upload-panel').classList.add('hidden');
+            document.getElementById('welcome-message').classList.remove('hidden');
+        }
+
+        function focusSidebar() {
+            // Highlight the sidebar with a brief visual cue
+            const sidebar = document.querySelector('.sidebar-panel');
+            sidebar.style.boxShadow = '0 0 0 2px #334155, 0 0 20px rgba(51,65,85,0.3)';
+            sidebar.style.transition = 'box-shadow 0.3s ease';
+            setTimeout(() => {
+                sidebar.style.boxShadow = '';
+            }, 1500);
+
+            // If there are apps, auto-select the first one
+            if (allApps.length > 0) {
+                selectApplication(allApps[0]);
+            }
+        }
+
+        function onFileSelected(docType, inputEl) {
+            const file = inputEl.files[0];
+            const slot = document.getElementById(`slot-${docType}`);
+            const nameEl = document.getElementById(`file-name-${docType}`);
+
+            console.log(`onFileSelected called for ${docType}, file:`, file);
+
+            if (file) {
+                // Validate file size (10MB limit)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`File ${file.name} exceeds 10MB size limit.`);
+                    inputEl.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)) {
+                    alert(`Invalid file type. Only PDF, JPG, and PNG are accepted.`);
+                    inputEl.value = '';
+                    return;
+                }
+
+                uploadFiles[docType] = file;
+                slot.classList.add('has-file');
+                nameEl.innerText = `✓ ${file.name}`;
+                console.log(`File stored for ${docType}:`, file.name);
+            } else {
+                delete uploadFiles[docType];
+                slot.classList.remove('has-file');
+                nameEl.innerText = '';
+                console.log(`File removed for ${docType}`);
+            }
+
+            updateDocCount();
+        }
+
+        function updateDocCount() {
+            const count = Object.keys(uploadFiles).length;
+            const badge = document.getElementById('doc-count-badge');
+            const text = document.getElementById('doc-count-text');
+            const btn = document.getElementById('upload-run-btn');
+            const msg = document.getElementById('upload-guardrail-msg');
+
+            text.innerText = `${count} / 3 minimum`;
+
+            if (count >= 3) {
+                badge.className = 'guardrail-badge guardrail-badge-ok';
+                badge.innerHTML = `<span class="material-symbols-outlined" style="font-size:13px">check_circle</span><span id="doc-count-text">${count} / 3 minimum</span>`;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                msg.innerHTML = '✅ Guardrail requirement met. Ready to run the pipeline.';
+                msg.style.color = '#34d399';
+            } else {
+                badge.className = 'guardrail-badge guardrail-badge-warn';
+                badge.innerHTML = `<span class="material-symbols-outlined" style="font-size:13px">warning</span><span id="doc-count-text">${count} / 3 minimum</span>`;
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+                msg.innerHTML = `⚠ Upload at least ${3 - count} more document(s) to enable pipeline execution.`;
+                msg.style.color = '#c9a96e';
+            }
+        }
+
+        function setUploadNodeState(node, state) {
+            const el = document.getElementById(`upload-node-${node}`);
+            if (!el) return;
+            const statusSpan = el.querySelector('.node-status');
+            if (state === 'active') {
+                el.className = 'pipeline-node node-active';
+                statusSpan.innerText = 'PROCESSING...';
+                statusSpan.className = 'status-badge badge-review mt-2 node-status';
+            } else if (state === 'passed') {
+                el.className = 'pipeline-node node-passed';
+                statusSpan.innerText = 'PASSED';
+                statusSpan.className = 'status-badge badge-approved mt-2 node-status';
+            } else if (state === 'failed') {
+                el.className = 'pipeline-node node-failed';
+                statusSpan.innerText = 'REVIEWED';
+                statusSpan.className = 'status-badge badge-denied mt-2 node-status';
+            } else {
+                el.className = 'pipeline-node';
+                statusSpan.innerText = 'IDLE';
+                statusSpan.className = 'status-badge badge-idle mt-2 node-status';
+            }
+        }
+
+        function resetUploadNodes() {
+            ['kyc', 'credit', 'policy', 'arbitrator', 'decision'].forEach(n => {
+                setUploadNodeState(n, 'idle');
+            });
+        }
+
+        async function runUploadPipeline() {
+            const fileCount = Object.keys(uploadFiles).length;
+            if (fileCount < 3) {
+                alert('Please upload at least 3 documents (ID Proof, Bank Statement, Pay Slip).');
+                return;
+            }
+
+            const fastMode = document.getElementById('fast-mode-toggle').checked;
+
+            // Show pipeline section
+            document.getElementById('upload-pipeline-section').classList.remove('hidden');
+            document.getElementById('upload-guardrail-results').classList.add('hidden');
+            document.getElementById('upload-results').classList.add('hidden');
+            resetUploadNodes();
+
+            // Disable run button during processing
+            const runBtn = document.getElementById('upload-run-btn');
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.5';
+            runBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">hourglass_top</span><span>Processing...</span>';
+
+            // Animate nodes
+            const delay = fastMode ? 50 : 1200;
+            const steps = ['kyc', 'credit', 'policy', 'arbitrator'];
+            for (let i = 0; i < steps.length; i++) {
+                setUploadNodeState(steps[i], 'active');
+                await new Promise(r => setTimeout(r, delay));
+                if (i > 0 && !fastMode) {
+                    setUploadNodeState(steps[i - 1], 'passed');
+                }
+            }
+            if (!fastMode) {
+                setUploadNodeState('decision', 'active');
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // Build FormData
+            const formData = new FormData();
+            formData.append('name', document.getElementById('upload-name').value);
+            formData.append('income', document.getElementById('upload-income').value);
+            formData.append('monthly_debt', document.getElementById('upload-debt').value);
+            formData.append('loan_amount', document.getElementById('upload-loan').value);
+            formData.append('property_value', document.getElementById('upload-property').value);
+            formData.append('employment_months', document.getElementById('upload-employment').value);
+            formData.append('fast_mode', fastMode);
+
+            // Add files in order with their doc types
+            const docOrder = ['id_proof', 'bank_statement', 'pay_slip', 'employment_letter'];
+            for (const docType of docOrder) {
+                if (uploadFiles[docType]) {
+                    formData.append('documents', uploadFiles[docType]);
+                    formData.append('doc_types', docType);
+                }
+            }
+
+            try {
+                const response = await fetch('/api/underwrite/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    renderUploadResults(result);
+                } else {
+                    alert(`Error: ${result.error || 'Unknown error'}`);
+                    resetUploadNodes();
+                }
+            } catch (err) {
+                console.error('Upload pipeline error:', err);
+                alert('Failed to run pipeline. Check console for details.');
+                resetUploadNodes();
+            }
+
+            // Re-enable run button
+            runBtn.disabled = false;
+            runBtn.style.opacity = '1';
+            runBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">play_arrow</span><span>Run Assessment</span>';
+        }
+
+        function renderUploadResults(result) {
+            // Update pipeline node states
+            const kycOut = result.kyc_output;
+            const creditOut = result.credit_output;
+            const policyOut = result.policy_output;
+            const arbOut = result.arbitrator_output;
+
+            setUploadNodeState('kyc', (kycOut && !kycOut.missing_critical_docs && !kycOut.fraud_flag) ? 'passed' : 'failed');
+            setUploadNodeState('credit', (creditOut && creditOut.risk_category !== 'very_high') ? 'passed' : 'failed');
+            setUploadNodeState('policy', (policyOut && policyOut.policy_passed) ? 'passed' : 'failed');
+            setUploadNodeState('arbitrator', (arbOut && arbOut.recommendation === 'approve') ? 'passed' : 'failed');
+            setUploadNodeState('decision', 'active');
+
+            currentUploadAppId = result.application_id;
+
+            // Show guardrail validation results
+            const guardrailSection = document.getElementById('upload-guardrail-results');
+            const guardrailContent = document.getElementById('upload-guardrail-content');
+            guardrailSection.classList.remove('hidden');
+
+            const gv = result.guardrail_validation;
+            if (gv) {
+                if (gv.is_valid) {
+                    guardrailContent.innerHTML = `
+                        <div class="guardrail-badge guardrail-badge-ok" style="margin-bottom:8px">
+                            <span class="material-symbols-outlined" style="font-size:14px">check_circle</span>
+                            All input guardrails passed
+                        </div>
+                        <div style="font-size:0.75rem;color:#727781">Document count, file types, file sizes, and applicant data all validated successfully.</div>
+                    `;
+                } else {
+                    let errorsHtml = gv.errors.map(e => `
+                        <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(239,68,68,0.1)">
+                            <span class="material-symbols-outlined" style="font-size:14px;color:#f87171;flex-shrink:0;margin-top:1px">error_outline</span>
+                            <span style="font-size:0.75rem;color:#f87171">${e}</span>
+                        </div>
+                    `).join('');
+                    guardrailContent.innerHTML = `
+                        <div class="guardrail-badge guardrail-badge-warn" style="margin-bottom:12px">
+                            <span class="material-symbols-outlined" style="font-size:14px">warning</span>
+                            ${gv.errors.length} guardrail violation(s) detected
+                        </div>
+                        <div class="guardrail-errors-box">${errorsHtml}</div>
+                        <div style="font-size:0.72rem;color:#727781;margin-top:10px;font-style:italic">Pipeline continued with available data. Results may be degraded.</div>
+                    `;
+                }
+            }
+
+            // Build results HTML using a simplified view
+            const resultsDiv = document.getElementById('upload-results');
+            resultsDiv.classList.remove('hidden');
+
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+
+            // KYC card
+            const kycBadgeClass = kycOut && kycOut.fraud_flag ? 'badge-denied' : (kycOut && kycOut.missing_critical_docs ? 'badge-review' : 'badge-approved');
+            const kycBadgeText = kycOut && kycOut.fraud_flag ? 'FRAUD ALERT' : (kycOut && kycOut.missing_critical_docs ? 'MISSING DOCS' : 'VERIFIED');
+            html += `
+                <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">verified_user</span>
+                            <span>KYC Assessment</span>
+                        </h4>
+                        <span class="status-badge ${kycBadgeClass}">${kycBadgeText}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Verified Name</div>
+                            <div class="font-semibold text-white mt-1">${kycOut?.verified_fields?.name || 'N/A'}</div>
+                        </div>
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Confidence</div>
+                            <div class="font-semibold text-white mt-1">${kycOut ? Math.round(kycOut.confidence * 100) + '%' : 'N/A'}</div>
+                        </div>
+                    </div>
+                    ${kycOut?.fraud_flag ? '<div class="p-3 rounded-lg border border-brand-danger bg-brand-danger/10 text-brand-danger text-xs flex items-center space-x-2"><span class="material-symbols-outlined text-sm">warning</span><span class="font-semibold">Fraud/Inconsistency Alert Triggered</span></div>' : ''}
+                </div>`;
+
+            // Credit card
+            const creditBadgeClass = creditOut?.risk_category === 'low' ? 'badge-approved' : (creditOut?.risk_category === 'medium' ? 'badge-review' : 'badge-denied');
+            html += `
+                <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">analytics</span>
+                            <span>Credit Risk</span>
+                        </h4>
+                        <span class="status-badge ${creditBadgeClass}">${creditOut?.risk_category || 'N/A'}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Credit Score</div>
+                            <div class="font-mono-custom font-semibold text-white mt-1">${creditOut?.credit_score || 'N/A'}</div>
+                        </div>
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">DTI Ratio</div>
+                            <div class="font-mono-custom font-semibold text-white mt-1">${creditOut ? (creditOut.dti_ratio * 100).toFixed(2) + '%' : 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                        <span class="font-semibold">Reasoning: </span>${creditOut?.reasoning || 'N/A'}
+                    </div>
+                </div>`;
+
+            html += '</div>';
+
+            // Arbitrator summary
+            const arbBadgeClass = arbOut?.recommendation === 'approve' ? 'badge-approved' : (arbOut?.recommendation === 'deny' ? 'badge-denied' : 'badge-review');
+            html += `
+                <div class="bg-brand-card p-5 rounded-xl border-2 border-brand-primary/45 space-y-4 mt-6">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">balance</span>
+                            <span>Arbitrator Recommendation</span>
+                        </h4>
+                        <span class="status-badge ${arbBadgeClass}" style="font-size:0.72rem;padding:4px 14px">${arbOut?.recommendation || 'N/A'}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <div class="bg-brand-bg/40 p-3 rounded-lg col-span-3">
+                            <div class="text-xs text-slate-400">Summary</div>
+                            <p class="text-white mt-1 text-sm">${arbOut?.summary || 'N/A'}</p>
+                        </div>
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Confidence</div>
+                            <div class="font-mono-custom text-xl font-bold text-white mt-1">${arbOut ? Math.round(arbOut.confidence_score * 100) + '%' : 'N/A'}</div>
+                        </div>
+                    </div>
+                    ${arbOut?.risk_flags?.length > 0 ? `
+                        <div class="p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-brand-warning text-xs space-y-1">
+                            <div class="font-semibold flex items-center space-x-1">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                <span>Risk Flags:</span>
+                            </div>
+                            <ul class="list-disc pl-5 space-y-1">
+                                ${arbOut.risk_flags.map(f => `<li>${f}</li>`).join('')}
+                            </ul>
+                        </div>` : ''}
+                </div>`;
+
+            // Final status
+            const finalStatus = result.final_status;
+            const statusColor = finalStatus === 'approved' ? '#34d399' : (finalStatus === 'denied' ? '#f87171' : '#c9a96e');
+            const statusBorder = finalStatus === 'approved' ? 'rgba(52,211,153,0.4)' : (finalStatus === 'denied' ? 'rgba(239,68,68,0.4)' : 'rgba(80,61,30,0.4)');
+            html += `
+                <div class="p-5 rounded-xl border text-center space-y-2 mt-6" style="border-color:${statusBorder};background:${statusColor}08">
+                    <div class="text-xs text-slate-400 uppercase font-semibold">Pipeline Result</div>
+                    <div class="font-headline font-bold uppercase" style="font-size:1.8rem;color:${statusColor}">${(finalStatus || 'UNDER REVIEW').toUpperCase()}</div>
+                    <div class="text-xs text-slate-500 font-mono-custom">Application ID: ${result.application_id || 'N/A'}</div>
+                </div>`;
+
+            resultsDiv.innerHTML = html;
+
+            // Handle HITL Decision Panel
+            if (result.final_status === 'under_review') {
+                document.getElementById('upload-decision-panel').classList.remove('hidden');
+                document.getElementById('upload-final-status-container').classList.add('hidden');
+                
+                // Pre-select decision based on arbitrator output
+                if (arbOut) {
+                    const decisionSelect = document.getElementById('upload-officer-decision');
+                    if (arbOut.recommendation === 'approve') {
+                        decisionSelect.value = 'approve';
+                    } else if (arbOut.recommendation === 'deny') {
+                        decisionSelect.value = 'deny';
+                    } else {
+                        decisionSelect.value = 'override_approve';
+                    }
+                }
+            } else {
+                document.getElementById('upload-decision-panel').classList.add('hidden');
+                const fsContainer = document.getElementById('upload-final-status-container');
+                const fsValue = document.getElementById('upload-final-status-value');
+                fsContainer.classList.remove('hidden');
+                
+                if (result.final_status === 'approved') {
+                    fsContainer.className = "mt-6 p-5 rounded-xl border border-brand-success bg-brand-success/5 text-center space-y-2";
+                    fsValue.className = "text-3xl font-headline font-bold uppercase text-brand-success";
+                } else if (result.final_status === 'denied') {
+                    fsContainer.className = "mt-6 p-5 rounded-xl border border-brand-danger bg-brand-danger/5 text-center space-y-2";
+                    fsValue.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
+                } else {
+                    fsContainer.className = "mt-6 p-5 rounded-xl border border-brand-warning bg-brand-warning/5 text-center space-y-2";
+                    fsValue.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
+                }
+                fsValue.textContent = result.final_status;
+            }
+
+            // Scroll to results
+            document.getElementById('upload-pipeline-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function submitUploadDecision() {
+            if (!currentUploadAppId) return;
+
+            const officerId = document.getElementById('upload-officer-id').value.trim();
+            const decision = document.getElementById('upload-officer-decision').value;
+            const overrideReason = document.getElementById('upload-officer-reason').value.trim();
+            const fastMode = document.getElementById('fast-mode-toggle').checked;
+
+            if (!officerId) {
+                alert("Please provide an Officer ID");
+                return;
+            }
+
+            const btn = document.getElementById('submit-upload-decision-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size:18px">sync</span> Submitting...';
+
+            try {
+                const response = await fetch(`/api/decision/${currentUploadAppId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        officer_id: officerId,
+                        decision: decision,
+                        override_reason: overrideReason,
+                        fast_mode: fastMode
+                    })
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    renderUploadResults(result); // Re-render with new final status
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (err) {
+                console.error("Error submitting decision:", err);
+                alert("Failed to submit decision");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Final Decision';
+            }
+        }
+
         // Init
         fetchApplications();
     </script>
 </body>
+
 </html>

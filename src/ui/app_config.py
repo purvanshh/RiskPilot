@@ -27,7 +27,14 @@ ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "")
 # Request protection
 # ---------------------------------------------------------------------------
 
-MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(1 * 1024 * 1024)))  # 1 MB
+MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(50 * 1024 * 1024)))  # 50 MB
+
+# ---------------------------------------------------------------------------
+# File uploads
+# ---------------------------------------------------------------------------
+
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(_PROJECT_ROOT, "data", "uploads"))
 
 # ---------------------------------------------------------------------------
 # Authentication

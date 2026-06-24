@@ -1,3 +1,9 @@
+ifeq ($(OS),Windows_NT)
+    PYTHON = python
+else
+    PYTHON = python3
+endif
+
 .PHONY: install test run-demo lint format clean
 
 install:
@@ -9,7 +15,7 @@ test:
 	pytest -v --cov=src --cov-report=term-missing
 
 run-demo:
-	python3 src/ui/app.py
+	$(PYTHON) src/ui/app.py
 
 lint:
 	flake8 src/ tests/
