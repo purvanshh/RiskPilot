@@ -25,19 +25,24 @@ class RetrievedPolicyChunk:
         return f"{document} | {section} | chunk {chunk_index}"
 
 
+_db_cache: dict = {}
+
+
 def _ensure_collection(
     policy_docs_dir: str = "./data/policy_docs",
     persist_dir: str = "./data/chroma_db",
     collection_name: str = "lending_policy",
 ) -> Any:
+    cache_key = f"{persist_dir}:{collection_name}"
+    if cache_key in _db_cache:
+        return _db_cache[cache_key]
     db = get_vector_store(persist_directory=persist_dir, collection_name=collection_name)
     try:
-        # If the collection is empty, index documents.
         if hasattr(db, "count") and db.count() == 0:
             load_and_index_policies(policy_docs_dir, persist_dir, collection_name)
     except Exception:
-        # best-effort: if collection can't be queried, reload index
         load_and_index_policies(policy_docs_dir, persist_dir, collection_name)
+    _db_cache[cache_key] = db
     return db
 
 

@@ -6,6 +6,12 @@ logger = logging.getLogger(__name__)
 class MockEmbeddings:
     """Fallback embeddings when the real sentence transformer is unavailable."""
 
+    def __init__(self):
+        logger.warning(
+            "FALLING BACK TO MockEmbeddings — all embeddings will be zero vectors. "
+            "Install sentence-transformers for semantic retrieval."
+        )
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         return [[0.0] * 768 for _ in texts]
 

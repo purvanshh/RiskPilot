@@ -41,12 +41,12 @@ def policy_node(state: LoanApplicationState) -> Dict[str, Any]:
         # 1. Compute LTV (Loan-to-Value)
         ltv = ltv_calculator(loan_amount, property_value)
 
-        # 2. Retrieve policy documents (RAG)
+        # 2. Retrieve policy documents (RAG) — queries grounded in actual applicant data
         queries = [
-            "What is the minimum credit score for a loan?",
-            "What is the maximum DTI ratio allowed?",
-            "What are the employment stability requirements?",
-            f"What is the maximum LTV ratio allowed for loan amount {loan_amount}?",
+            f"Is a credit score of {credit_score} sufficient for loan approval?",
+            f"Is a DTI ratio of {dti:.2%} within acceptable limits?",
+            f"Are {employment_months} months of employment tenure sufficient?",
+            f"Maximum LTV ratio for a ${loan_amount:,.0f} loan on ${property_value:,.0f} property?",
         ]
 
         retrieved_chunk_objects = []

@@ -9,7 +9,7 @@ test:
 	pytest -v --cov=src --cov-report=term-missing
 
 run-demo:
-	python src/ui/app.py
+	python3 src/ui/app.py
 
 lint:
 	flake8 src/ tests/

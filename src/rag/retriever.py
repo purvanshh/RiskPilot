@@ -51,12 +51,18 @@ class PolicyRetriever:
         self.top_k = top_k
         self.similarity_threshold = similarity_threshold
         self.embedding_provider = get_embedding_provider()
+        self._db = None
+
+    def _get_db(self):
+        if self._db is None:
+            self._db = get_vector_store(
+                persist_directory=self.persist_dir,
+                collection_name=self.collection_name,
+            )
+        return self._db
 
     def _ensure_index(self) -> None:
-        db = get_vector_store(
-            persist_directory=self.persist_dir,
-            collection_name=self.collection_name,
-        )
+        db = self._get_db()
         try:
             if hasattr(db, "count") and db.count() == 0:
                 load_and_index_policies(
@@ -73,10 +79,7 @@ class PolicyRetriever:
 
     def retrieve(self, query: str) -> List[RetrievedPolicyChunk]:
         self._ensure_index()
-        db = get_vector_store(
-            persist_directory=self.persist_dir,
-            collection_name=self.collection_name,
-        )
+        db = self._get_db()
 
         query_embedding = self.embedding_provider.embed_query(query)
         try:
