@@ -34,11 +34,11 @@ from app_config import (  # noqa: E402
 )
 
 from src.graph.graph import graph, human_review_node  # noqa: E402
+from src.graph.state import ExtractedDocument  # noqa: E402
 from src.graph.state import HumanDecision, LoanApplicationState  # noqa: E402
+from src.guardrails.input_validation import validate_application_input  # noqa: E402
 from src.tools.data_loader import build_state_from_app, load_test_applications  # noqa: E402
 from src.tools.document_tools import detect_document_type, parse_document  # noqa: E402
-from src.graph.state import ExtractedDocument  # noqa: E402
-from src.guardrails.input_validation import validate_application_input  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("riskpilot.app")
@@ -226,7 +226,7 @@ def underwrite_upload():
                 "property_value": float(request.form.get("property_value", 0)),
                 "employment_months": int(request.form.get("employment_months", 0)),
             }
-            
+
             # Validate that required fields are provided
             if not applicant_data["name"]:
                 return jsonify({"error": "Applicant name is required"}), 400
@@ -234,8 +234,10 @@ def underwrite_upload():
                 return jsonify({"error": "Annual income must be greater than 0"}), 400
             if applicant_data["loan_amount"] <= 0:
                 return jsonify({"error": "Loan amount must be greater than 0"}), 400
-            
-            logger.info(f"Applicant data parsed: name={applicant_data['name']}, income={applicant_data['income']}")
+
+            logger.info(
+                f"Applicant data parsed: name={applicant_data['name']}, income={applicant_data['income']}"
+            )
         except (ValueError, TypeError) as e:
             return jsonify({"error": f"Invalid applicant data: {str(e)}"}), 400
 
@@ -375,6 +377,48 @@ def submit_decision(app_id: str):
                 )
 
             stored = _PIPELINE_STATE[app_id]
+            kyc_out = stored.get("kyc_output", {})
+            arb_out = stored.get("arbitrator_output", {})
+
+            # Guardrail: detect risky applications that require override decisions
+            kyc_confidence_low = kyc_out.get("confidence", 1.0) < 0.5
+            kyc_has_flags = kyc_out.get("fraud_flag", False) or kyc_out.get(
+                "missing_critical_docs", False
+            )
+            arb_review_required = (
+                arb_out.get("recommendation", "") == "review_required"
+                if isinstance(arb_out, dict)
+                else getattr(arb_out, "recommendation", "") == "review_required"
+            )
+            is_risky = kyc_confidence_low or kyc_has_flags or arb_review_required
+
+            if is_risky and decision not in ("override_approve", "override_deny"):
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "This application has risk flags (low KYC confidence, fraud alert, "
+                                "missing documents, or arbitrator requires review). You must use an "
+                                "OVERRIDE decision (override_approve or override_deny) with a "
+                                "mandatory justification."
+                            )
+                        }
+                    ),
+                    400,
+                )
+
+            if is_risky and not (override_reason and override_reason.strip()):
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "Override justification is REQUIRED for applications with risk flags. "
+                                "Please provide the rationale for your override decision."
+                            )
+                        }
+                    ),
+                    400,
+                )
 
             # Reject if a final decision has already been recorded.
             if stored.get("final_status") in ("approved", "denied"):

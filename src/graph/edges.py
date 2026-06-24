@@ -28,6 +28,13 @@ def route_after_kyc(
         logger.warning("KYC: Fraud/inconsistency flagged! Routing directly to HUMAN_REVIEW.")
         return "human_review"
 
+    confidence = kyc.get("confidence", 1.0)
+    if confidence < 0.5:
+        logger.warning(
+            f"KYC: Low confidence ({confidence:.2f}) — routing to HUMAN_REVIEW for manual review."
+        )
+        return "human_review"
+
     logger.info("KYC: Documentation validated. Routing to CREDIT assessment.")
     return "credit"
 

@@ -64,7 +64,9 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
         elif text and isinstance(text, str) and not fields:
             # If text is already extracted text but fields are empty (e.g., uploaded documents)
             try:
-                logger.info(f"Extracting fields from pre-parsed text for {doc.document_type} (text length: {len(text)})")
+                logger.info(
+                    f"Extracting fields from pre-parsed text for {doc.document_type} (text length: {len(text)})"
+                )
                 logger.info(f"First 200 chars of pre-parsed text: {text[:200]}")
                 extracted_data = extract_fields(text, doc.document_type)
                 fields = extracted_data.get("extracted_fields", {})
@@ -128,6 +130,22 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
     fraud_flag = False
     kyc_confidence = 1.0
 
+    # Check for document parsing failures
+    parsing_failed = any(d.validation_status == "invalid" for d in extracted_docs)
+    all_fields_empty = all(not d.extracted_fields for d in extracted_docs)
+    if parsing_failed:
+        logger.warning(
+            f"Document parsing failed for one or more documents. "
+            f"Degrading KYC confidence for review."
+        )
+        kyc_confidence = min(kyc_confidence, 0.3)
+        fraud_flag = True
+    elif all_fields_empty and not missing_critical_docs:
+        logger.warning(
+            "All documents parsed but no fields extracted. " "Degrading KYC confidence for review."
+        )
+        kyc_confidence = min(kyc_confidence, 0.4)
+
     # Compare income: flag if >20% difference (Task 5.2)
     if pay_slip_income and bank_statement_income:
         diff_ratio = abs(pay_slip_income - bank_statement_income) / max(
@@ -170,14 +188,10 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
 
     # Extract name from documents or fall back to applicant data
     extracted_name = next(
-        (
-            d.extracted_fields.get("name")
-            for d in extracted_docs
-            if d.extracted_fields.get("name")
-        ),
+        (d.extracted_fields.get("name") for d in extracted_docs if d.extracted_fields.get("name")),
         None,
     )
-    
+
     # Log name extraction details for debugging
     if extracted_name:
         logger.info(f"Name extracted from documents: {extracted_name}")
@@ -185,14 +199,24 @@ def kyc_node(state: LoanApplicationState) -> Dict[str, Any]:
         logger.warning("No name extracted from documents, checking applicant_data fallback")
         for doc in extracted_docs:
             logger.info(f"Document {doc.document_type} extracted_fields: {doc.extracted_fields}")
-    
+
     # Fall back to applicant_data if no name found in documents
     final_name = extracted_name if extracted_name else state.applicant_data.get("name")
     if not final_name:
-        logger.warning(f"No name found in documents or applicant_data for application {state.application_id}")
+        logger.warning(
+            f"No name found in documents or applicant_data for application {state.application_id}"
+        )
+
+    # Determine KYC status based on confidence and flags
+    if fraud_flag or kyc_confidence < 0.5:
+        kyc_status = "needs_review"
+    elif missing_critical_docs:
+        kyc_status = "incomplete"
+    else:
+        kyc_status = "verified"
 
     kyc_output = {
-        "status": "completed",
+        "status": kyc_status,
         "missing_critical_docs": len(missing_critical_docs) > 0,
         "missing_docs_list": missing_critical_docs,
         "fraud_flag": fraud_flag,

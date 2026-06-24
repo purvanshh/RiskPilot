@@ -1071,6 +1071,13 @@
                             <span class="material-symbols-outlined text-brand-primary text-xl">assignment_turned_in</span>
                             <span>Lending Officer Manual Decision (HITL)</span>
                         </h4>
+
+                        <div id="upload-decision-guardrail-warn" class="hidden p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-xs flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm text-brand-warning">warning</span>
+                            <span class="text-brand-warning font-semibold">Risk Flags Detected</span>
+                            <span class="text-slate-300">— Plain Approve/Deny are disabled. Only <strong>Override Approve</strong> or <strong>Override Deny</strong> with a mandatory justification are permitted for this application.</span>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Officer ID</label>
@@ -1425,6 +1432,12 @@
                             <span>Lending Officer Manual Decision (HITL)</span>
                         </h4>
 
+                        <div id="decision-guardrail-warn" class="hidden p-3 rounded-lg border border-brand-warning bg-brand-warning/10 text-xs flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-sm text-brand-warning">warning</span>
+                            <span class="text-brand-warning font-semibold">Risk Flags Detected</span>
+                            <span class="text-slate-300">— Plain Approve/Deny are disabled. Only <strong>Override Approve</strong> or <strong>Override Deny</strong> with a mandatory justification are permitted for this application.</span>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Officer ID</label>
@@ -1479,6 +1492,19 @@
         let appResults = {};     // Stores pipeline result per app ID
         let appDecisions = {};   // Stores final decision result per app ID
         let allApps = [];        // Store all loaded apps for re-render
+        let currentKycOut = null;  // KYC output for guardrail validation
+        let currentArbOut = null;  // Arbitrator output for guardrail validation
+        let uploadKycOut = null;   // Upload pipeline KYC output
+        let uploadArbOut = null;   // Upload pipeline Arbitrator output
+
+        // Check if the case requires override-only decisions (risky KYC or review_required)
+        function isRiskyCase(kycOut, arbOut) {
+            const kycLow = kycOut && kycOut.confidence < 0.5;
+            const arbReview = arbOut && arbOut.recommendation === 'review_required';
+            const kycFraud = kycOut && kycOut.fraud_flag;
+            const kycMissing = kycOut && kycOut.missing_critical_docs;
+            return kycLow || arbReview || kycFraud || kycMissing;
+        }
 
         async function fetchApplications() {
             try {
@@ -1795,6 +1821,10 @@
             const policyOut = state.policy_output;
             const arbOut = state.arbitrator_output;
 
+            // Save for guardrail validation in submitDecision()
+            currentKycOut = kycOut;
+            currentArbOut = arbOut;
+
             setNodeState('kyc', (kycOut && !kycOut.missing_critical_docs && !kycOut.fraud_flag) ? 'passed' : 'failed');
             setNodeState('credit', (creditOut && creditOut.risk_category !== 'very_high') ? 'passed' : 'failed');
             setNodeState('policy', (policyOut && policyOut.policy_passed) ? 'passed' : 'failed');
@@ -1814,6 +1844,10 @@
                 } else if (kycOut.missing_critical_docs) {
                     kycBadge.className = 'status-badge badge-review';
                     kycBadge.innerText = 'MISSING DOCS';
+                    document.getElementById('kyc-fraud-alert').classList.add('hidden');
+                } else if (kycOut.confidence < 0.5) {
+                    kycBadge.className = 'status-badge badge-review';
+                    kycBadge.innerText = 'LOW CONFIDENCE';
                     document.getElementById('kyc-fraud-alert').classList.add('hidden');
                 } else {
                     kycBadge.className = 'status-badge badge-approved';
@@ -1947,12 +1981,31 @@
             // Reset officer decision form to align with recommendation
             if (arbOut) {
                 const decisionSelect = document.getElementById('officer-decision');
-                if (arbOut.recommendation === 'approve') {
-                    decisionSelect.value = 'approve';
-                } else if (arbOut.recommendation === 'deny') {
-                    decisionSelect.value = 'deny';
+                const warnBanner = document.getElementById('decision-guardrail-warn');
+                const risky = isRiskyCase(kycOut, arbOut);
+
+                if (risky) {
+                    // Disable plain approve/deny — only allow override decisions
+                    decisionSelect.querySelector('option[value="approve"]').disabled = true;
+                    decisionSelect.querySelector('option[value="deny"]').disabled = true;
+                    if (arbOut.recommendation === 'deny') {
+                        decisionSelect.value = 'override_deny';
+                    } else {
+                        decisionSelect.value = 'override_approve';
+                    }
+                    // Show guardrail warning banner
+                    if (warnBanner) warnBanner.classList.remove('hidden');
                 } else {
-                    decisionSelect.value = 'override_approve';
+                    decisionSelect.querySelector('option[value="approve"]').disabled = false;
+                    decisionSelect.querySelector('option[value="deny"]').disabled = false;
+                    if (warnBanner) warnBanner.classList.add('hidden');
+                    if (arbOut.recommendation === 'approve') {
+                        decisionSelect.value = 'approve';
+                    } else if (arbOut.recommendation === 'deny') {
+                        decisionSelect.value = 'deny';
+                    } else {
+                        decisionSelect.value = 'override_approve';
+                    }
                 }
             }
         }
@@ -1968,6 +2021,18 @@
             if (!officerId) {
                 alert("Please provide an Officer ID");
                 return;
+            }
+
+            // Guardrail: enforce override + mandatory justification for risky cases
+            if (isRiskyCase(currentKycOut, currentArbOut)) {
+                if (decision !== 'override_approve' && decision !== 'override_deny') {
+                    alert("This application has risk flags (low KYC confidence, fraud alert, or missing docs). You must use an OVERRIDE decision with a mandatory justification.");
+                    return;
+                }
+                if (!overrideReason) {
+                    alert("Override justification is REQUIRED for applications with risk flags. Please explain the rationale for your override decision.");
+                    return;
+                }
             }
 
             try {
@@ -2262,11 +2327,21 @@
             const policyOut = result.policy_output;
             const arbOut = result.arbitrator_output;
 
+            // Save for guardrail validation in submitUploadDecision()
+            uploadKycOut = kycOut;
+            uploadArbOut = arbOut;
+
             setUploadNodeState('kyc', (kycOut && !kycOut.missing_critical_docs && !kycOut.fraud_flag) ? 'passed' : 'failed');
             setUploadNodeState('credit', (creditOut && creditOut.risk_category !== 'very_high') ? 'passed' : 'failed');
             setUploadNodeState('policy', (policyOut && policyOut.policy_passed) ? 'passed' : 'failed');
             setUploadNodeState('arbitrator', (arbOut && arbOut.recommendation === 'approve') ? 'passed' : 'failed');
-            setUploadNodeState('decision', 'active');
+            if (result.final_status === 'approved') {
+                setUploadNodeState('decision', 'passed');
+            } else if (result.final_status === 'denied') {
+                setUploadNodeState('decision', 'failed');
+            } else {
+                setUploadNodeState('decision', 'active');
+            }
 
             currentUploadAppId = result.application_id;
 
@@ -2310,8 +2385,8 @@
             let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
 
             // KYC card
-            const kycBadgeClass = kycOut && kycOut.fraud_flag ? 'badge-denied' : (kycOut && kycOut.missing_critical_docs ? 'badge-review' : 'badge-approved');
-            const kycBadgeText = kycOut && kycOut.fraud_flag ? 'FRAUD ALERT' : (kycOut && kycOut.missing_critical_docs ? 'MISSING DOCS' : 'VERIFIED');
+            const kycBadgeClass = kycOut && kycOut.fraud_flag ? 'badge-denied' : (kycOut && kycOut.missing_critical_docs ? 'badge-review' : (kycOut && kycOut.confidence < 0.5 ? 'badge-review' : 'badge-approved'));
+            const kycBadgeText = kycOut && kycOut.fraud_flag ? 'FRAUD ALERT' : (kycOut && kycOut.missing_critical_docs ? 'MISSING DOCS' : (kycOut && kycOut.confidence < 0.5 ? 'LOW CONFIDENCE' : 'VERIFIED'));
             html += `
                 <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-3">
                     <div class="flex justify-between items-center">
@@ -2361,6 +2436,106 @@
                 </div>`;
 
             html += '</div>';
+
+            // Policy card
+            if (policyOut) {
+                const policyBadgeClass = policyOut.policy_passed ? 'badge-approved' : 'badge-denied';
+                const policyBadgeText = policyOut.policy_passed ? 'PASSED' : 'VIOLATED';
+                const ltvDisplay = policyOut.ltv_ratio ? `${(policyOut.ltv_ratio * 100).toFixed(2)}%` : 'N/A';
+                const maxDti = Math.round(policyOut.max_dti_threshold * 100);
+                const policyReasoning = policyOut.reasoning || 'N/A';
+
+                // Violations HTML
+                let violationsHtml = '';
+                if (!policyOut.policy_passed && policyOut.violations && policyOut.violations.length > 0) {
+                    violationsHtml = `
+                        <div class="p-3 rounded-lg border border-brand-danger bg-brand-danger/10 text-brand-danger text-xs space-y-1.5">
+                            <div class="font-semibold flex items-center space-x-1">
+                                <span class="material-symbols-outlined text-sm">error_outline</span>
+                                <span>Policy Violations:</span>
+                            </div>
+                            <ul class="space-y-1">
+                                ${policyOut.violations.map(v => `
+                                    <li class="flex items-start space-x-2">
+                                        <span class="material-symbols-outlined text-sm shrink-0 mt-0.5" style="font-size:14px">error_outline</span>
+                                        <span>${v}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>`;
+                }
+
+                // RAG chunks HTML
+                let chunksHtml = '';
+                if (policyOut.retrieved_policy_chunks && policyOut.retrieved_policy_chunks.length > 0) {
+                    const chunkCards = policyOut.retrieved_policy_chunks.map((chunkRaw, idx) => {
+                        let chunkText = '';
+                        let citationText = `Policy Document | Section ${idx + 1}`;
+                        let scoreText = '';
+
+                        try {
+                            const parsed = JSON.parse(chunkRaw);
+                            chunkText = parsed.text || String(chunkRaw);
+                            citationText = parsed.citation || citationText;
+                            if (parsed.score !== undefined) {
+                                scoreText = `${(parsed.score * 100).toFixed(1)}% similarity`;
+                            }
+                        } catch (e) {
+                            chunkText = String(chunkRaw);
+                        }
+
+                        const cleanedText = chunkText
+                            .replace(/[#*`~_]/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
+                        return `
+                            <div class="p-2.5 rounded-lg bg-brand-bg/50 border border-brand-border/50">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-brand-primary text-xs font-semibold">${citationText}</span>
+                                    <span class="text-xs text-slate-500">${scoreText || 'Ref #' + (idx + 1)}</span>
+                                </div>
+                                <p class="text-slate-300 text-xs leading-relaxed">${cleanedText}</p>
+                            </div>`;
+                    }).join('');
+
+                    chunksHtml = `
+                        <div class="space-y-2">
+                            <div class="text-xs font-semibold text-slate-400">RAG Retrieved Policy Evidence:</div>
+                            <div class="space-y-2 max-h-56 overflow-y-auto">${chunkCards}</div>
+                        </div>`;
+                }
+
+                html += `
+                <div class="bg-brand-card p-5 rounded-xl border border-brand-border space-y-4 mt-6">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-headline font-bold text-white flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-brand-primary text-xl">gavel</span>
+                            <span>Policy Compliance</span>
+                        </h4>
+                        <span class="status-badge ${policyBadgeClass}" style="font-size:0.72rem;padding:4px 14px">${policyBadgeText}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">LTV Ratio</div>
+                            <div class="font-mono-custom text-xl font-bold text-white mt-1">${ltvDisplay}</div>
+                        </div>
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">LTV Limit</div>
+                            <div class="font-semibold text-white mt-1">80% (Max Exception 85%)</div>
+                        </div>
+                        <div class="bg-brand-bg/40 p-3 rounded-lg">
+                            <div class="text-xs text-slate-400">Max DTI Rule</div>
+                            <div class="font-mono-custom text-xl font-bold text-white mt-1">${maxDti}%</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                        <span class="font-semibold">Reasoning: </span>${policyReasoning}
+                    </div>
+                    ${violationsHtml}
+                    ${chunksHtml}
+                </div>`;
+            }
 
             // Arbitrator summary
             const arbBadgeClass = arbOut?.recommendation === 'approve' ? 'badge-approved' : (arbOut?.recommendation === 'deny' ? 'badge-denied' : 'badge-review');
@@ -2413,15 +2588,32 @@
                 document.getElementById('upload-decision-panel').classList.remove('hidden');
                 document.getElementById('upload-final-status-container').classList.add('hidden');
                 
-                // Pre-select decision based on arbitrator output
+                // Pre-select decision based on arbitrator output and risk flags
                 if (arbOut) {
                     const decisionSelect = document.getElementById('upload-officer-decision');
-                    if (arbOut.recommendation === 'approve') {
-                        decisionSelect.value = 'approve';
-                    } else if (arbOut.recommendation === 'deny') {
-                        decisionSelect.value = 'deny';
+                    const warnBanner = document.getElementById('upload-decision-guardrail-warn');
+                    const risky = isRiskyCase(kycOut, arbOut);
+
+                    if (risky) {
+                        decisionSelect.querySelector('option[value="approve"]').disabled = true;
+                        decisionSelect.querySelector('option[value="deny"]').disabled = true;
+                        if (arbOut.recommendation === 'deny') {
+                            decisionSelect.value = 'override_deny';
+                        } else {
+                            decisionSelect.value = 'override_approve';
+                        }
+                        if (warnBanner) warnBanner.classList.remove('hidden');
                     } else {
-                        decisionSelect.value = 'override_approve';
+                        decisionSelect.querySelector('option[value="approve"]').disabled = false;
+                        decisionSelect.querySelector('option[value="deny"]').disabled = false;
+                        if (warnBanner) warnBanner.classList.add('hidden');
+                        if (arbOut.recommendation === 'approve') {
+                            decisionSelect.value = 'approve';
+                        } else if (arbOut.recommendation === 'deny') {
+                            decisionSelect.value = 'deny';
+                        } else {
+                            decisionSelect.value = 'override_approve';
+                        }
                     }
                 }
             } else {
@@ -2458,6 +2650,18 @@
             if (!officerId) {
                 alert("Please provide an Officer ID");
                 return;
+            }
+
+            // Guardrail: enforce override + mandatory justification for risky cases
+            if (isRiskyCase(uploadKycOut, uploadArbOut)) {
+                if (decision !== 'override_approve' && decision !== 'override_deny') {
+                    alert("This application has risk flags (low KYC confidence, fraud alert, or missing docs). You must use an OVERRIDE decision with a mandatory justification.");
+                    return;
+                }
+                if (!overrideReason) {
+                    alert("Override justification is REQUIRED for applications with risk flags. Please explain the rationale for your override decision.");
+                    return;
+                }
             }
 
             const btn = document.getElementById('submit-upload-decision-btn');

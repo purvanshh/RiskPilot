@@ -83,7 +83,11 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
 
     if state.kyc_output:
         kyc = state.kyc_output
-        kyc_ok = not kyc.get("missing_critical_docs", False) and not kyc.get("fraud_flag", False)
+        kyc_ok = (
+            not kyc.get("missing_critical_docs", False)
+            and not kyc.get("fraud_flag", False)
+            and kyc.get("confidence", 1.0) >= 0.5
+        )
         kyc_fraud = kyc.get("fraud_flag", False)
         kyc_missing_docs = kyc.get("missing_critical_docs", False)
 
@@ -147,6 +151,13 @@ def arbitrator_node(state: LoanApplicationState) -> Dict[str, Any]:
         recommendation = "review_required"
         agreement = "conflict"
         confidence_score = 0.90
+    elif kyc_confidence < 0.5:
+        risk_flags.append(
+            f"KYC Low Confidence ({kyc_confidence:.0%}) — documents could not be reliably verified"
+        )
+        recommendation = "review_required"
+        agreement = "conflict"
+        confidence_score = 0.85
 
     if credit_risk in ["high", "very_high"]:
         risk_flags.append(f"Credit risk category is {credit_risk.upper()} (Score: {credit_score})")
