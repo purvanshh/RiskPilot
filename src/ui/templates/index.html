@@ -927,21 +927,25 @@
                         finalStatusVal.style.cssText = "font-size:1.8rem;color:#34d399";
                         finalStatusVal.innerText = "APPROVED";
                         setNodeState('decision', 'passed');
+                        document.getElementById('decision-panel').classList.add('hidden');
                     } else if (fs === 'denied') {
                         finalStatusVal.className = "font-headline font-bold uppercase final-denied";
                         finalStatusVal.style.cssText = "font-size:1.8rem;color:#f87171";
                         finalStatusVal.innerText = "DENIED";
                         setNodeState('decision', 'failed');
+                        document.getElementById('decision-panel').classList.add('hidden');
                     } else {
                         finalStatusVal.className = "font-headline font-bold uppercase final-review";
                         finalStatusVal.style.cssText = "font-size:1.8rem;color:#c9a96e";
                         finalStatusVal.innerText = "UNDER MANUAL REVIEW";
                         setNodeState('decision', 'active');
+                        document.getElementById('decision-panel').classList.remove('hidden');
                     }
                 } else {
                     setNodeState('decision', 'active');
                     document.getElementById('final-status-container').classList.add('hidden');
                     document.getElementById('final-status-value').innerText = '---';
+                    document.getElementById('decision-panel').classList.remove('hidden');
                 }
             } else {
                 // Fresh case — hide results
@@ -987,6 +991,7 @@
         function clearResults() {
             document.getElementById('pipeline-results').classList.add('hidden');
             document.getElementById('final-status-container').classList.add('hidden');
+            document.getElementById('decision-panel').classList.remove('hidden');
             
             // Reset decision form inputs
             document.getElementById('officer-id').value = 'OFFICER-01';
@@ -1310,18 +1315,21 @@
                     finalStatusVal.style.cssText = "font-size:1.8rem;color:#34d399";
                     finalStatusVal.innerText = "APPROVED";
                     setNodeState('decision', 'passed');
+                    document.getElementById('decision-panel').classList.add('hidden');
                 } else if (result.final_status === 'denied') {
                     appStatuses[currentApp.application_id] = 'denied';
                     finalStatusVal.className = "font-headline font-bold uppercase";
                     finalStatusVal.style.cssText = "font-size:1.8rem;color:#f87171";
                     finalStatusVal.innerText = "DENIED";
                     setNodeState('decision', 'failed');
+                    document.getElementById('decision-panel').classList.add('hidden');
                 } else {
                     appStatuses[currentApp.application_id] = 'under_review';
                     finalStatusVal.className = "font-headline font-bold uppercase";
                     finalStatusVal.style.cssText = "font-size:1.8rem;color:#c9a96e";
                     finalStatusVal.innerText = "UNDER MANUAL REVIEW";
                     setNodeState('decision', 'active');
+                    document.getElementById('decision-panel').classList.remove('hidden');
                 }
 
                 // Re-render apps list to show updated status live in the sidebar
