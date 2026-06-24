@@ -69,7 +69,7 @@ Loan Application
        │ always
        ▼
 ┌─────────────┐
-│ Human-in-   │  Loan officer reviews recommendation via Streamlit UI
+│ Human-in-   │  Loan officer reviews recommendation via Flask UI
 │  the-Loop   │  Can approve, deny, or override with documented reason
 └─────────────┘
 ```
@@ -111,13 +111,16 @@ RiskPilot/
 │   │   ├── output_validation.py   # Post-decision confidence & schema guards
 │   │   └── audit_logger.py        # Append-only JSONL audit trail
 │   ├── ui/
-│   │   └── officer_dashboard.py   # Streamlit loan officer review UI
+│   │   ├── app.py                 # Flask web application & API server
+│   │   ├── app_config.py          # Configuration (auth, rate limits, CORS)
+│   │   ├── templates/             # HTML templates (index.html)
+│   │   └── static/                # Static assets (styles, badges)
 │   └── main.py                    # CLI entry point with LangSmith tracing
 ├── data/
 │   ├── policy_docs/               # 6 policy documents (RAG source)
 │   ├── synthetic_docs/            # 20 synthetic PDFs for APP-001..APP-006
 │   └── test_applications.json     # 6 structured test cases
-├── tests/                         # 123 tests across 14 test files
+├── tests/                         # 155 tests across 19 test files
 ├── docs/
 │   ├── graph.mmd                  # LangGraph Mermaid diagram source
 │   └── graph.png                  # Rendered graph visualisation
@@ -211,20 +214,22 @@ Expected output:
 Demo Summary: 6/6 cases verified successfully.
 ```
 
-### Launch the Streamlit officer dashboard
+### Launch the Flask officer dashboard
 
 ```bash
-streamlit run src/ui/officer_dashboard.py
+python src/ui/app.py
 # or:
 make run-demo
 ```
+
+Open your web browser and navigate to `http://127.0.0.1:8501/` to access the interactive loan underwriting dashboard.
 
 ---
 
 ## Testing
 
 ```bash
-# Run the full test suite (123 tests)
+# Run the full test suite (155 tests)
 make test
 
 # Verbose with coverage report
@@ -251,8 +256,9 @@ pytest tests/test_observability.py -v
 | `test_observability.py` | 11 | LangSmith tracing, env vars, trace_id propagation |
 | `test_human_review_tool.py` | 7 | HITL tool, override validation |
 | `test_state.py` | 5 | State schema serialisation, decorator validation |
-| `test_integration.py` | ... | Full pipeline integration, parametrised risk levels |
+| `test_integration.py` | 14 | Full pipeline integration, parametrised risk levels |
 | `test_document_tools.py` | 7 | PDF parsing, OCR fallback, field extraction |
+| `test_api_security.py` | 32 | Malformed JSON, rate limiting, auth, state desync, race conditions |
 
 ---
 
@@ -286,7 +292,7 @@ cat logs/audit.jsonl | python -m json.tool | head -40
 |--------|-------------|
 | `make install` | Install dependencies + pre-commit hooks |
 | `make test` | Run full pytest suite with coverage |
-| `make run-demo` | Launch Streamlit officer dashboard |
+| `make run-demo` | Launch Flask officer dashboard |
 | `make lint` | Check code style (black, isort, flake8) |
 | `make format` | Auto-format code (black + isort) |
 | `make clean` | Remove `__pycache__`, `.coverage`, `chroma_db` |
@@ -322,5 +328,5 @@ cat logs/audit.jsonl | python -m json.tool | head -40
 | LangSmith observability + `trace_id` per run | ✅ |
 | Synthetic test data (APP-001 … APP-006) | ✅ |
 | All 6 demo cases pass end-to-end | ✅ |
-| 123 automated tests — 100% pass rate | ✅ |
+| 155 automated tests — 100% pass rate | ✅ |
 | General underwriting guidelines policy doc | ✅ |
