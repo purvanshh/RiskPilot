@@ -32,10 +32,9 @@ def _ensure_collection(
 ) -> Any:
     db = get_vector_store(persist_directory=persist_dir, collection_name=collection_name)
     try:
-        if hasattr(db, "persist"):
-            # If the collection is empty, index documents.
-            if hasattr(db, "count") and db.count() == 0:
-                load_and_index_policies(policy_docs_dir, persist_dir, collection_name)
+        # If the collection is empty, index documents.
+        if hasattr(db, "count") and db.count() == 0:
+            load_and_index_policies(policy_docs_dir, persist_dir, collection_name)
     except Exception:
         # best-effort: if collection can't be queried, reload index
         load_and_index_policies(policy_docs_dir, persist_dir, collection_name)
