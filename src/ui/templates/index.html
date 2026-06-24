@@ -531,29 +531,7 @@
                     <div class="metric-card"><div class="metric-label">Employment</div><div id="detail-employment" class="metric-value">---</div></div>
                 </div>
 
-                <!-- Pre-assessment Rationale (hidden until pipeline runs) -->
-                <div id="rationale-panel" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-                    <!-- Approve Reasons -->
-                    <div class="rationale-approve rounded-xl p-4 space-y-2">
-                        <div class="flex items-center space-x-2 mb-2">
-                            <span class="material-symbols-outlined text-brand-success text-lg">check_circle</span>
-                            <span class="text-xs font-headline font-bold text-brand-success uppercase tracking-wider">Factors Supporting Approval</span>
-                        </div>
-                        <div id="approve-reasons-list" class="space-y-1">
-                            <div class="text-xs text-slate-500 italic">No strong approve signals for this case.</div>
-                        </div>
-                    </div>
-                    <!-- Deny Reasons -->
-                    <div class="rationale-deny rounded-xl p-4 space-y-2">
-                        <div class="flex items-center space-x-2 mb-2">
-                            <span class="material-symbols-outlined text-brand-danger text-lg">cancel</span>
-                            <span class="text-xs font-headline font-bold text-brand-danger uppercase tracking-wider">Factors Supporting Denial</span>
-                        </div>
-                        <div id="deny-reasons-list" class="space-y-1">
-                            <div class="text-xs text-slate-500 italic">No policy violations anticipated.</div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Pipeline Status Viz -->
                 <div class="section-card" style="margin-bottom:16px">
@@ -720,6 +698,30 @@
                             </div>
                             <div id="policy-chunks" class="space-y-2 max-h-56 overflow-y-auto">
                                 <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pre-assessment Rationale / Key Factors -->
+                    <div id="rationale-panel" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Approve Reasons -->
+                        <div class="rationale-approve rounded-xl p-4 space-y-2">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="material-symbols-outlined text-brand-success text-lg">check_circle</span>
+                                <span class="text-xs font-headline font-bold text-brand-success uppercase tracking-wider">Factors Supporting Approval</span>
+                            </div>
+                            <div id="approve-reasons-list" class="space-y-1">
+                                <div class="text-xs text-slate-500 italic">No strong approve signals for this case.</div>
+                            </div>
+                        </div>
+                        <!-- Deny Reasons -->
+                        <div class="rationale-deny rounded-xl p-4 space-y-2">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="material-symbols-outlined text-brand-danger text-lg">cancel</span>
+                                <span class="text-xs font-headline font-bold text-brand-danger uppercase tracking-wider">Factors Supporting Denial</span>
+                            </div>
+                            <div id="deny-reasons-list" class="space-y-1">
+                                <div class="text-xs text-slate-500 italic">No policy violations anticipated.</div>
                             </div>
                         </div>
                     </div>
@@ -983,7 +985,6 @@
         }
 
         function clearResults() {
-            document.getElementById('rationale-panel').classList.add('hidden');
             document.getElementById('pipeline-results').classList.add('hidden');
             document.getElementById('final-status-container').classList.add('hidden');
             
@@ -1120,7 +1121,6 @@
             setNodeState('decision', 'active');
 
             // Show results section
-            document.getElementById('rationale-panel').classList.remove('hidden');
             document.getElementById('pipeline-results').classList.remove('hidden');
 
             // KYC Assessment
