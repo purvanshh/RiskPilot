@@ -531,8 +531,8 @@
                     <div class="metric-card"><div class="metric-label">Employment</div><div id="detail-employment" class="metric-value">---</div></div>
                 </div>
 
-                <!-- Pre-assessment Rationale (always visible after case is loaded) -->
-                <div id="rationale-panel" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Pre-assessment Rationale (hidden until pipeline runs) -->
+                <div id="rationale-panel" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
                     <!-- Approve Reasons -->
                     <div class="rationale-approve rounded-xl p-4 space-y-2">
                         <div class="flex items-center space-x-2 mb-2">
@@ -564,7 +564,7 @@
                         </div>
                         <button id="run-pipeline-btn" onclick="runPipeline()" class="btn-run">
                             <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
-                            <span>Run Assessment</span>
+                            <span>Run Multi-Agent Assessment</span>
                         </button>
                     </div>
 
@@ -983,6 +983,7 @@
         }
 
         function clearResults() {
+            document.getElementById('rationale-panel').classList.add('hidden');
             document.getElementById('pipeline-results').classList.add('hidden');
             document.getElementById('final-status-container').classList.add('hidden');
             
@@ -1119,6 +1120,7 @@
             setNodeState('decision', 'active');
 
             // Show results section
+            document.getElementById('rationale-panel').classList.remove('hidden');
             document.getElementById('pipeline-results').classList.remove('hidden');
 
             // KYC Assessment
