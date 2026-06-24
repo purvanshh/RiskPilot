@@ -45,6 +45,59 @@
             background: #222a3d;
             border-radius: 10px;
         }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .badge-pending {
+            background-color: rgba(148, 163, 184, 0.08);
+            color: #94a3b8;
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+        .badge-review {
+            background-color: rgba(255, 185, 95, 0.08);
+            color: #ffb95f;
+            border-color: rgba(255, 185, 95, 0.18);
+        }
+        .badge-approved {
+            background-color: rgba(78, 222, 163, 0.08);
+            color: #4edea3;
+            border-color: rgba(78, 222, 163, 0.18);
+        }
+        .badge-denied {
+            background-color: rgba(255, 180, 171, 0.08);
+            color: #ffb4ab;
+            border-color: rgba(255, 180, 171, 0.18);
+        }
+        .badge-idle {
+            background-color: rgba(148, 163, 184, 0.04);
+            color: #64748b;
+            border-color: rgba(148, 163, 184, 0.08);
+        }
+
+        /* Pipeline Cards Lift Effects */
+        .pipeline-card {
+            background-color: #171f33; 
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .pipeline-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(85, 141, 255, 0.2);
+            border-color: rgba(85, 141, 255, 0.25);
+            background-color: #1b253b;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -125,29 +178,29 @@
                         </div>
                         <p id="app-desc" class="text-sm text-slate-400">---</p>
                     </div>
-                    <div class="text-right">
-                        <div class="text-xs text-slate-400 uppercase font-semibold">Expected Recommendation</div>
-                        <div id="expected-recommendation" class="text-lg font-headline font-bold uppercase text-brand-primary">---</div>
+                    <div class="text-right flex flex-col items-end gap-1">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Expected Recommendation</div>
+                        <div id="expected-recommendation" class="text-xs font-headline font-bold uppercase py-1 px-3 rounded-full border border-transparent">---</div>
                     </div>
                 </div>
 
                 <!-- Core Details Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
-                        <div class="text-xs text-slate-400 mb-1">Annual Income</div>
-                        <div id="detail-income" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Annual Income</div>
+                        <div id="detail-income" class="text-2xl font-headline font-extrabold text-white">---</div>
                     </div>
-                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
-                        <div class="text-xs text-slate-400 mb-1">Monthly Debt</div>
-                        <div id="detail-debt" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Monthly Debt</div>
+                        <div id="detail-debt" class="text-2xl font-headline font-extrabold text-white">---</div>
                     </div>
-                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
-                        <div class="text-xs text-slate-400 mb-1">Loan Requested</div>
-                        <div id="detail-loan" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Loan Requested</div>
+                        <div id="detail-loan" class="text-2xl font-headline font-extrabold text-white">---</div>
                     </div>
-                    <div class="bg-brand-card p-4 rounded-xl border border-brand-border">
-                        <div class="text-xs text-slate-400 mb-1">Employment Stability</div>
-                        <div id="detail-employment" class="text-lg font-mono-custom font-semibold text-white">---</div>
+                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Employment Stability</div>
+                        <div id="detail-employment" class="text-2xl font-headline font-extrabold text-white">---</div>
                     </div>
                 </div>
 
@@ -170,39 +223,39 @@
                     <!-- Visual Nodes -->
                     <div class="grid grid-cols-5 gap-3 pt-2 relative">
                         <!-- Node 1: Ingestion & KYC -->
-                        <div id="node-kyc" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                        <div id="node-kyc" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
                             <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">description</span>
-                            <div class="text-xs font-semibold text-white">KYC Agent</div>
+                            <div class="text-xs font-semibold text-white font-headline">KYC Agent</div>
                             <div class="text-[10px] text-slate-400 mt-1">Parser & Identity</div>
-                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
                         </div>
                         <!-- Node 2: Credit Score -->
-                        <div id="node-credit" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                        <div id="node-credit" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
                             <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">monitoring</span>
-                            <div class="text-xs font-semibold text-white">Credit Agent</div>
+                            <div class="text-xs font-semibold text-white font-headline">Credit Agent</div>
                             <div class="text-[10px] text-slate-400 mt-1">DTI & Scoring</div>
-                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
                         </div>
                         <!-- Node 3: Policy Check -->
-                        <div id="node-policy" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                        <div id="node-policy" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
                             <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">gavel</span>
-                            <div class="text-xs font-semibold text-white">Policy Agent</div>
+                            <div class="text-xs font-semibold text-white font-headline">Policy Agent</div>
                             <div class="text-[10px] text-slate-400 mt-1">RAG Compliance</div>
-                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
                         </div>
                         <!-- Node 4: Arbitrator -->
-                        <div id="node-arbitrator" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                        <div id="node-arbitrator" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
                             <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">balance</span>
-                            <div class="text-xs font-semibold text-white">Arbitrator</div>
+                            <div class="text-xs font-semibold text-white font-headline">Arbitrator</div>
                             <div class="text-[10px] text-slate-400 mt-1">Weighted Vote</div>
-                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
                         </div>
                         <!-- Node 5: Officer decision -->
-                        <div id="node-decision" class="border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300">
+                        <div id="node-decision" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
                             <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">assignment_ind</span>
-                            <div class="text-xs font-semibold text-white">HITL Review</div>
+                            <div class="text-xs font-semibold text-white font-headline">HITL Review</div>
                             <div class="text-[10px] text-slate-400 mt-1">Manual Override</div>
-                            <div class="node-status text-[10px] font-semibold text-slate-500 mt-2">IDLE</div>
+                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
                         </div>
                     </div>
                 </div>
@@ -429,29 +482,29 @@
                 const status = appStatuses[app.application_id] || 'new';
                 
                 let statusLabel = 'REVIEW PENDING';
-                let statusColor = 'text-slate-400';
+                let badgeClass = 'badge-pending';
                 
                 if (status === 'approved') {
                     statusLabel = 'APPROVED';
-                    statusColor = 'text-brand-success';
+                    badgeClass = 'badge-approved';
                 } else if (status === 'denied') {
                     statusLabel = 'DENIED';
-                    statusColor = 'text-brand-danger';
+                    badgeClass = 'badge-denied';
                 } else if (status === 'under_review') {
                     statusLabel = 'REVIEW';
-                    statusColor = 'text-brand-warning';
+                    badgeClass = 'badge-review';
                 }
                                       
                 const card = document.createElement('div');
-                card.className = `glass-card p-3 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card' : ''}`;
+                card.className = `glass-card p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card shadow-md shadow-blue-500/5' : ''}`;
                 card.onclick = () => selectApplication(app);
                 card.innerHTML = `
                     <div>
                         <div class="text-sm font-semibold text-white">${app.applicant_data.name}</div>
-                        <div class="text-[10px] text-slate-400 font-mono-custom mt-0.5">${app.application_id}</div>
+                        <div class="text-[10px] text-slate-400 font-mono-custom mt-1">${app.application_id}</div>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold uppercase ${statusColor}">${statusLabel}</span>
+                        <span class="status-badge ${badgeClass}">${statusLabel}</span>
                     </div>
                 `;
                 listContainer.appendChild(card);
@@ -475,7 +528,13 @@
             document.getElementById('app-name').innerText = app.applicant_data.name;
             document.getElementById('app-id').innerText = app.application_id;
             document.getElementById('app-desc').innerText = app.description || '';
-            document.getElementById('expected-recommendation').innerText = app.expected_recommendation;
+            const expectedRec = app.expected_recommendation;
+            const recEl = document.getElementById('expected-recommendation');
+            recEl.innerText = expectedRec.replace('_', ' ');
+            recEl.className = "text-xs font-headline font-bold uppercase py-1 px-3 rounded-full " + 
+                              (expectedRec === 'approve' ? 'bg-brand-success/8 text-brand-success border border-brand-success/15' 
+                               : expectedRec === 'deny' ? 'bg-brand-danger/8 text-brand-danger border border-brand-danger/15' 
+                               : 'bg-brand-warning/8 text-brand-warning border border-brand-warning/15');
 
             // Details
             document.getElementById('detail-income').innerText = `$${app.applicant_data.income.toLocaleString()}`;
@@ -491,26 +550,28 @@
             const nodes = ['kyc', 'credit', 'policy', 'arbitrator', 'decision'];
             nodes.forEach(node => {
                 const el = document.getElementById(`node-${node}`);
-                el.className = "border border-brand-border bg-brand-card p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
-                el.querySelector('.node-status').innerText = 'IDLE';
-                el.querySelector('.node-status').className = 'node-status text-[10px] font-semibold text-slate-500 mt-2';
+                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center";
+                const statusSpan = el.querySelector('.node-status');
+                statusSpan.innerText = 'IDLE';
+                statusSpan.className = 'status-badge badge-idle mt-2 node-status';
             });
         }
 
         function setNodeState(node, state) {
             const el = document.getElementById(`node-${node}`);
+            const statusSpan = el.querySelector('.node-status');
             if (state === 'active') {
-                el.className = "border-2 border-brand-primary bg-brand-card/80 p-4 rounded-lg flex flex-col items-center text-center scale-105 transition duration-300 shadow-lg shadow-blue-500/10";
-                el.querySelector('.node-status').innerText = 'PROCESSING...';
-                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-primary mt-2 animate-pulse';
+                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center scale-105 shadow-lg shadow-blue-500/10 border-brand-primary/45 bg-brand-card/85";
+                statusSpan.innerText = 'PROCESSING...';
+                statusSpan.className = 'status-badge badge-review mt-2 node-status animate-pulse';
             } else if (state === 'passed') {
-                el.className = "border border-brand-success bg-brand-success/5 p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
-                el.querySelector('.node-status').innerText = 'PASSED';
-                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-success mt-2';
+                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center border-brand-success/45 bg-brand-success/5";
+                statusSpan.innerText = 'PASSED';
+                statusSpan.className = 'status-badge badge-approved mt-2 node-status';
             } else if (state === 'failed') {
-                el.className = "border border-brand-danger bg-brand-danger/5 p-4 rounded-lg flex flex-col items-center text-center transition duration-300";
-                el.querySelector('.node-status').innerText = 'FAILED / REVIEW';
-                el.querySelector('.node-status').className = 'node-status text-[10px] font-bold text-brand-danger mt-2';
+                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center border-brand-danger/45 bg-brand-danger/5";
+                statusSpan.innerText = 'FAILED / REVIEW';
+                statusSpan.className = 'status-badge badge-denied mt-2 node-status';
             }
         }
 
@@ -568,15 +629,15 @@
             if (kycOut) {
                 const kycBadge = document.getElementById('kyc-badge');
                 if (kycOut.fraud_flag) {
-                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-danger/25 text-brand-danger';
+                    kycBadge.className = 'status-badge badge-denied';
                     kycBadge.innerText = 'FRAUD ALERT';
                     document.getElementById('kyc-fraud-alert').classList.remove('hidden');
                 } else if (kycOut.missing_critical_docs) {
-                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-warning/25 text-brand-warning';
+                    kycBadge.className = 'status-badge badge-review';
                     kycBadge.innerText = 'MISSING DOCS';
                     document.getElementById('kyc-fraud-alert').classList.add('hidden');
                 } else {
-                    kycBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-success/25 text-brand-success';
+                    kycBadge.className = 'status-badge badge-approved';
                     kycBadge.innerText = 'VERIFIED';
                     document.getElementById('kyc-fraud-alert').classList.add('hidden');
                 }
@@ -589,10 +650,10 @@
             // Credit Risk
             if (creditOut) {
                 const creditBadge = document.getElementById('credit-badge');
-                const riskColor = creditOut.risk_category === 'low' ? 'bg-brand-success/25 text-brand-success'
-                                  : creditOut.risk_category === 'medium' ? 'bg-brand-warning/25 text-brand-warning'
-                                  : 'bg-brand-danger/25 text-brand-danger';
-                creditBadge.className = `text-xs px-2.5 py-1 rounded-full font-semibold uppercase ${riskColor}`;
+                const badgeStyle = creditOut.risk_category === 'low' ? 'badge-approved'
+                                   : creditOut.risk_category === 'medium' ? 'badge-review'
+                                   : 'badge-denied';
+                creditBadge.className = `status-badge ${badgeStyle}`;
                 creditBadge.innerText = creditOut.risk_category;
 
                 document.getElementById('credit-score').innerText = creditOut.credit_score;
@@ -606,11 +667,11 @@
             if (policyOut) {
                 const policyBadge = document.getElementById('policy-badge');
                 if (policyOut.policy_passed) {
-                    policyBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-success/25 text-brand-success';
+                    policyBadge.className = 'status-badge badge-approved';
                     policyBadge.innerText = 'PASSED';
                     document.getElementById('policy-violations-container').classList.add('hidden');
                 } else {
-                    policyBadge.className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-brand-danger/25 text-brand-danger';
+                    policyBadge.className = 'status-badge badge-denied';
                     policyBadge.innerText = 'VIOLATED';
 
                     const violationsList = document.getElementById('policy-violations-list');
@@ -643,10 +704,10 @@
             // Arbitrator Result
             if (arbOut) {
                 const arbBadge = document.getElementById('arbitrator-badge');
-                const arbColor = arbOut.recommendation === 'approve' ? 'bg-brand-success/25 text-brand-success'
-                                 : arbOut.recommendation === 'deny' ? 'bg-brand-danger/25 text-brand-danger'
-                                 : 'bg-brand-warning/25 text-brand-warning';
-                arbBadge.className = `text-sm px-3.5 py-1.5 rounded-full font-bold uppercase ${arbColor}`;
+                const badgeStyle = arbOut.recommendation === 'approve' ? 'badge-approved'
+                                   : arbOut.recommendation === 'deny' ? 'badge-denied'
+                                   : 'badge-review';
+                arbBadge.className = `status-badge ${badgeStyle}`;
                 arbBadge.innerText = arbOut.recommendation;
 
                 document.getElementById('arbitrator-agreement').innerText = arbOut.agent_agreement.toUpperCase();
@@ -759,7 +820,7 @@
             }
 
             // Clear results text fields to prevent stale flashing
-            document.getElementById('kyc-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('kyc-badge').className = 'status-badge badge-pending';
             document.getElementById('kyc-badge').innerText = 'Pending';
             document.getElementById('kyc-name').innerText = '---';
             document.getElementById('kyc-income').innerText = '---';
@@ -767,7 +828,7 @@
             document.getElementById('kyc-confidence').innerText = '---';
             document.getElementById('kyc-fraud-alert').classList.add('hidden');
             
-            document.getElementById('credit-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('credit-badge').className = 'status-badge badge-pending';
             document.getElementById('credit-badge').innerText = 'Pending';
             document.getElementById('credit-score').innerText = '---';
             document.getElementById('credit-default').innerText = '---';
@@ -775,7 +836,7 @@
             document.getElementById('credit-confidence').innerText = '---';
             document.getElementById('credit-reason').innerText = '---';
             
-            document.getElementById('policy-badge').className = 'text-xs px-2.5 py-1 rounded-full font-semibold uppercase';
+            document.getElementById('policy-badge').className = 'status-badge badge-pending';
             document.getElementById('policy-badge').innerText = 'Pending';
             document.getElementById('policy-ltv').innerText = '---';
             document.getElementById('policy-max-dti').innerText = '---';
@@ -783,7 +844,7 @@
             document.getElementById('policy-violations-list').innerHTML = '';
             document.getElementById('policy-chunks').innerHTML = '';
             
-            document.getElementById('arbitrator-badge').className = 'text-sm px-3.5 py-1.5 rounded-full font-bold uppercase';
+            document.getElementById('arbitrator-badge').className = 'status-badge badge-pending';
             document.getElementById('arbitrator-badge').innerText = 'Pending';
             document.getElementById('arbitrator-agreement').innerText = '---';
             document.getElementById('arbitrator-summary').innerText = '---';
