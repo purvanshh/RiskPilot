@@ -98,6 +98,64 @@
             border-color: rgba(85, 141, 255, 0.25);
             background-color: #1b253b;
         }
+
+        /* Rationale Cards */
+        .rationale-approve {
+            background: rgba(78, 222, 163, 0.05);
+            border: 1px solid rgba(78, 222, 163, 0.18);
+        }
+        .rationale-deny {
+            background: rgba(255, 180, 171, 0.05);
+            border: 1px solid rgba(255, 180, 171, 0.18);
+        }
+        .rationale-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .rationale-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Policy chunk citation style */
+        .policy-chunk-card {
+            background: rgba(85, 141, 255, 0.04);
+            border: 1px solid rgba(85, 141, 255, 0.14);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .policy-citation {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #558dff;
+            background: rgba(85, 141, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .policy-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #94a3b8;
+            margin-left: 6px;
+        }
+
+        /* Header reset button hover */
+        .btn-reset-all {
+            background: rgba(255, 185, 95, 0.08);
+            border: 1px solid rgba(255, 185, 95, 0.2);
+            color: #ffb95f;
+            transition: all 0.2s ease;
+        }
+        .btn-reset-all:hover {
+            background: rgba(255, 185, 95, 0.15);
+            border-color: rgba(255, 185, 95, 0.4);
+        }
     </style>
     <script>
         tailwind.config = {
@@ -132,16 +190,20 @@
                 <p class="text-xs text-slate-400">Autonomous Multi-Agent Loan Risk Assessment System</p>
             </div>
         </div>
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-3">
             <label class="flex items-center space-x-2 cursor-pointer bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300">
                 <input type="checkbox" id="fast-mode-toggle" checked class="form-checkbox h-3.5 w-3.5 text-brand-primary rounded bg-brand-bg border-brand-border focus:ring-0">
                 <span>Fast Offline Demo (Instant)</span>
             </label>
+            <button id="reset-all-btn" onclick="resetAllProfiles()" class="btn-reset-all flex items-center space-x-2 font-semibold text-xs px-3 py-1.5 rounded-lg">
+                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                <span>Reset All Profiles</span>
+            </button>
             <div class="flex items-center space-x-2 text-xs bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg">
                 <span class="h-2 w-2 rounded-full bg-brand-success animate-pulse"></span>
                 <span class="text-slate-300 font-mono-custom">LangSmith Observability Tracing Active</span>
             </div>
-            <div class="text-xs text-slate-400 font-mono-custom">v1.2.0</div>
+            <div class="text-xs text-slate-400 font-mono-custom">v1.3.0</div>
         </div>
     </header>
 
@@ -204,20 +266,38 @@
                     </div>
                 </div>
 
+                <!-- Pre-assessment Rationale (always visible after case is loaded) -->
+                <div id="rationale-panel" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Approve Reasons -->
+                    <div class="rationale-approve rounded-xl p-4 space-y-2">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="material-symbols-outlined text-brand-success text-lg">check_circle</span>
+                            <span class="text-xs font-headline font-bold text-brand-success uppercase tracking-wider">Factors Supporting Approval</span>
+                        </div>
+                        <div id="approve-reasons-list" class="space-y-1">
+                            <div class="text-xs text-slate-500 italic">No strong approve signals for this case.</div>
+                        </div>
+                    </div>
+                    <!-- Deny Reasons -->
+                    <div class="rationale-deny rounded-xl p-4 space-y-2">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="material-symbols-outlined text-brand-danger text-lg">cancel</span>
+                            <span class="text-xs font-headline font-bold text-brand-danger uppercase tracking-wider">Factors Supporting Denial</span>
+                        </div>
+                        <div id="deny-reasons-list" class="space-y-1">
+                            <div class="text-xs text-slate-500 italic">No policy violations anticipated.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Pipeline Status Viz -->
                 <div class="bg-brand-card/45 border border-brand-border p-5 rounded-xl space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="font-headline font-semibold text-white">Orchestrated Agent Process Pipeline</h3>
-                        <div class="flex space-x-2">
-                            <button id="reset-btn" onclick="resetCurrentProfile()" class="flex items-center space-x-2 bg-brand-card hover:bg-slate-800 text-slate-300 border border-brand-border font-medium text-sm px-4 py-2 rounded-lg transition">
-                                <span class="material-symbols-outlined text-sm">restart_alt</span>
-                                <span>Reset Profile</span>
-                            </button>
-                            <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
-                                <span class="material-symbols-outlined text-sm">play_arrow</span>
-                                <span>Run Multi-Agent Assessment</span>
-                            </button>
-                        </div>
+                        <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
+                            <span class="material-symbols-outlined text-sm">play_arrow</span>
+                            <span>Run Multi-Agent Assessment</span>
+                        </button>
                     </div>
 
                     <!-- Visual Nodes -->
@@ -324,7 +404,7 @@
                                 </div>
                             </div>
                             <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
-                                <span class="font-semibold">Reasoning: </span><span id="credit-reason">---</span>
+                                <span class="font-semibold">Agent Reasoning: </span><span id="credit-reason">---</span>
                             </div>
                         </div>
                     </div>
@@ -353,18 +433,29 @@
                             </div>
                         </div>
 
+                        <!-- Policy Agent Reasoning -->
+                        <div class="text-xs text-slate-400 p-2.5 bg-brand-bg/20 rounded border border-brand-border italic">
+                            <span class="font-semibold">Policy Reasoning: </span><span id="policy-reason">---</span>
+                        </div>
+
                         <!-- Violations List -->
                         <div id="policy-violations-container" class="hidden space-y-2">
-                            <div class="text-xs font-semibold text-brand-danger">Underwriting Violations Detected:</div>
-                            <ul id="policy-violations-list" class="list-disc pl-5 text-sm text-brand-danger/95 space-y-1">
+                            <div class="text-xs font-semibold text-brand-danger flex items-center space-x-1">
+                                <span class="material-symbols-outlined text-sm">gpp_bad</span>
+                                <span>Underwriting Violations Detected:</span>
+                            </div>
+                            <ul id="policy-violations-list" class="space-y-2">
                                 <!-- Dynamically populated -->
                             </ul>
                         </div>
 
                         <!-- RAG Retrieved Chunks -->
                         <div class="space-y-2">
-                            <div class="text-xs font-semibold text-slate-400">RAG Retrieved Policy Reference Evidence:</div>
-                            <div id="policy-chunks" class="space-y-2 max-h-48 overflow-y-auto">
+                            <div class="text-xs font-semibold text-slate-400 flex items-center space-x-1">
+                                <span class="material-symbols-outlined text-sm">menu_book</span>
+                                <span>RAG Retrieved Policy Evidence:</span>
+                            </div>
+                            <div id="policy-chunks" class="space-y-2 max-h-56 overflow-y-auto">
                                 <!-- Dynamically populated -->
                             </div>
                         </div>
@@ -454,12 +545,17 @@
 
     <script>
         let currentApp = null;
-        let appStatuses = {}; // Track live demo status: 'new', 'under_review', 'approved', 'denied'
+        // Persistent state: keyed by app ID → { status, pipelineResult, decisionResult }
+        let appStatuses = {};
+        let appResults = {};     // Stores pipeline result per app ID
+        let appDecisions = {};   // Stores final decision result per app ID
+        let allApps = [];        // Store all loaded apps for re-render
 
         async function fetchApplications() {
             try {
                 const response = await fetch('/api/applications');
                 const apps = await response.json();
+                allApps = apps;
                 
                 // Initialize statuses if not set
                 apps.forEach(app => {
@@ -494,7 +590,7 @@
                     statusLabel = 'REVIEW';
                     badgeClass = 'badge-review';
                 }
-                                      
+                              
                 const card = document.createElement('div');
                 card.className = `glass-card p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card shadow-md shadow-blue-500/5' : ''}`;
                 card.onclick = () => selectApplication(app);
@@ -515,7 +611,7 @@
             currentApp = app;
             
             // Re-render apps list to show active card styling
-            fetchApplications();
+            renderApplications(allApps);
 
             // Hide welcome
             document.getElementById('welcome-message').classList.add('hidden');
@@ -542,8 +638,139 @@
             document.getElementById('detail-loan').innerText = `$${app.applicant_data.loan_amount.toLocaleString()}`;
             document.getElementById('detail-employment').innerText = `${app.applicant_data.employment_months} months`;
 
-            // Reset UI states, fields, nodes, and hidden containers
-            resetCurrentProfile();
+            // Render pre-assessment rationale from JSON data
+            renderRationale(app);
+
+            // Check if we have saved results for this app — restore them instead of resetting
+            const savedResult = appResults[app.application_id];
+            const savedDecision = appDecisions[app.application_id];
+
+            // Always reset pipeline nodes visually
+            resetNodes();
+
+            if (savedResult) {
+                // Restore previous pipeline run results
+                renderResults(savedResult);
+
+                if (savedDecision) {
+                    // Restore final decision status too
+                    const finalStatusContainer = document.getElementById('final-status-container');
+                    const finalStatusVal = document.getElementById('final-status-value');
+                    finalStatusContainer.classList.remove('hidden');
+
+                    const fs = savedDecision.final_status;
+                    if (fs === 'approved') {
+                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-success";
+                        finalStatusVal.innerText = "APPROVED";
+                        setNodeState('decision', 'passed');
+                    } else if (fs === 'denied') {
+                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
+                        finalStatusVal.innerText = "DENIED";
+                        setNodeState('decision', 'failed');
+                    } else {
+                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
+                        finalStatusVal.innerText = "UNDER MANUAL REVIEW";
+                        setNodeState('decision', 'active');
+                    }
+                } else {
+                    setNodeState('decision', 'active');
+                    document.getElementById('final-status-container').classList.add('hidden');
+                    document.getElementById('final-status-value').innerText = '---';
+                }
+            } else {
+                // Fresh case — hide results
+                clearResults();
+            }
+        }
+
+        function renderRationale(app) {
+            const approveList = document.getElementById('approve-reasons-list');
+            const denyList = document.getElementById('deny-reasons-list');
+
+            const approveReasons = app.approve_reasons || [];
+            const denyReasons = app.deny_reasons || [];
+
+            approveList.innerHTML = '';
+            denyList.innerHTML = '';
+
+            if (approveReasons.length === 0) {
+                approveList.innerHTML = '<div class="text-xs text-slate-500 italic">No strong approval signals for this case.</div>';
+            } else {
+                approveReasons.forEach(r => {
+                    approveList.innerHTML += `
+                        <div class="rationale-item">
+                            <span class="material-symbols-outlined text-brand-success text-sm shrink-0" style="margin-top:1px">check</span>
+                            <span class="text-slate-300 text-xs leading-relaxed">${r}</span>
+                        </div>`;
+                });
+            }
+
+            if (denyReasons.length === 0) {
+                denyList.innerHTML = '<div class="text-xs text-slate-500 italic">No policy violations anticipated.</div>';
+            } else {
+                denyReasons.forEach(r => {
+                    denyList.innerHTML += `
+                        <div class="rationale-item">
+                            <span class="material-symbols-outlined text-brand-danger text-sm shrink-0" style="margin-top:1px">close</span>
+                            <span class="text-slate-300 text-xs leading-relaxed">${r}</span>
+                        </div>`;
+                });
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('pipeline-results').classList.add('hidden');
+            document.getElementById('final-status-container').classList.add('hidden');
+            
+            // Reset decision form inputs
+            document.getElementById('officer-id').value = 'OFFICER-01';
+            document.getElementById('officer-reason').value = '';
+            
+            // Reset decision select based on recommendation
+            if (currentApp) {
+                if (currentApp.expected_recommendation === 'approve') {
+                    document.getElementById('officer-decision').value = 'approve';
+                } else if (currentApp.expected_recommendation === 'deny') {
+                    document.getElementById('officer-decision').value = 'deny';
+                } else {
+                    document.getElementById('officer-decision').value = 'override_approve';
+                }
+            }
+
+            // Clear results text fields
+            document.getElementById('kyc-badge').className = 'status-badge badge-pending';
+            document.getElementById('kyc-badge').innerText = 'Pending';
+            document.getElementById('kyc-name').innerText = '---';
+            document.getElementById('kyc-income').innerText = '---';
+            document.getElementById('kyc-employer').innerText = '---';
+            document.getElementById('kyc-confidence').innerText = '---';
+            document.getElementById('kyc-fraud-alert').classList.add('hidden');
+            
+            document.getElementById('credit-badge').className = 'status-badge badge-pending';
+            document.getElementById('credit-badge').innerText = 'Pending';
+            document.getElementById('credit-score').innerText = '---';
+            document.getElementById('credit-default').innerText = '---';
+            document.getElementById('credit-dti').innerText = '---';
+            document.getElementById('credit-confidence').innerText = '---';
+            document.getElementById('credit-reason').innerText = '---';
+            
+            document.getElementById('policy-badge').className = 'status-badge badge-pending';
+            document.getElementById('policy-badge').innerText = 'Pending';
+            document.getElementById('policy-ltv').innerText = '---';
+            document.getElementById('policy-max-dti').innerText = '---';
+            document.getElementById('policy-reason').innerText = '---';
+            document.getElementById('policy-violations-container').classList.add('hidden');
+            document.getElementById('policy-violations-list').innerHTML = '';
+            document.getElementById('policy-chunks').innerHTML = '';
+            
+            document.getElementById('arbitrator-badge').className = 'status-badge badge-pending';
+            document.getElementById('arbitrator-badge').innerText = 'Pending';
+            document.getElementById('arbitrator-agreement').innerText = '---';
+            document.getElementById('arbitrator-summary').innerText = '---';
+            document.getElementById('arbitrator-confidence').innerText = '---';
+            document.getElementById('arbitrator-flags-container').classList.add('hidden');
+            document.getElementById('arbitrator-flags-list').innerHTML = '';
+            document.getElementById('final-status-value').innerText = '---';
         }
 
         function resetNodes() {
@@ -578,6 +805,7 @@
         async function runPipeline() {
             if (!currentApp) return;
             resetNodes();
+            clearResults();
             document.getElementById('pipeline-results').classList.add('hidden');
 
             const fastMode = document.getElementById('fast-mode-toggle').checked;
@@ -598,11 +826,15 @@
                     body: JSON.stringify({ fast_mode: fastMode })
                 });
                 const result = await response.json();
+
+                // Persist the result for this app
+                appResults[currentApp.application_id] = result;
+
                 renderResults(result);
 
                 // Set dynamic status to under_review and re-fetch sidebar
                 appStatuses[currentApp.application_id] = 'under_review';
-                fetchApplications();
+                renderApplications(allApps);
             } catch (err) {
                 console.error("Error invoking underwrite pipeline:", err);
                 resetNodes();
@@ -678,7 +910,8 @@
                     violationsList.innerHTML = '';
                     policyOut.violations.forEach(v => {
                         const li = document.createElement('li');
-                        li.innerText = v;
+                        li.className = 'text-xs text-brand-danger/90 bg-brand-danger/5 border border-brand-danger/15 rounded-lg px-3 py-2 flex items-start space-x-2';
+                        li.innerHTML = `<span class="material-symbols-outlined text-sm shrink-0 mt-0.5">error_outline</span><span>${v}</span>`;
                         violationsList.appendChild(li);
                     });
                     document.getElementById('policy-violations-container').classList.remove('hidden');
@@ -687,18 +920,47 @@
                 document.getElementById('policy-ltv').innerText = policyOut.ltv_ratio ? `${(policyOut.ltv_ratio * 100).toFixed(2)}%` : 'N/A';
                 document.getElementById('policy-max-dti').innerText = `${Math.round(policyOut.max_dti_threshold * 100)}%`;
 
-                // Render retrieved policy chunks
+                // Policy reasoning
+                if (policyOut.reasoning) {
+                    document.getElementById('policy-reason').innerText = policyOut.reasoning;
+                }
+
+                // Render retrieved policy chunks with proper citation metadata
                 const chunksContainer = document.getElementById('policy-chunks');
                 chunksContainer.innerHTML = '';
-                policyOut.retrieved_policy_chunks.forEach((chunk, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-brand-bg/50 p-3 rounded-lg text-xs border border-brand-border';
-                    div.innerHTML = `
-                        <div class="font-semibold text-brand-primary mb-1">Retrieved Policy Reference #${index + 1}</div>
-                        <p class="text-slate-300 leading-relaxed">${chunk}</p>
-                    `;
-                    chunksContainer.appendChild(div);
-                });
+                if (policyOut.retrieved_policy_chunks && policyOut.retrieved_policy_chunks.length > 0) {
+                    policyOut.retrieved_policy_chunks.forEach((chunkRaw, index) => {
+                        let chunkText = '';
+                        let citationText = `Policy Document | Section ${index + 1}`;
+                        let scoreText = '';
+
+                        // Try to parse as JSON (structured chunk from real RAG pipeline)
+                        try {
+                            const parsed = JSON.parse(chunkRaw);
+                            chunkText = parsed.text || String(chunkRaw);
+                            citationText = parsed.citation || citationText;
+                            if (parsed.score !== undefined) {
+                                scoreText = `${(parsed.score * 100).toFixed(1)}% similarity`;
+                            }
+                        } catch(e) {
+                            // Fallback: plain string
+                            chunkText = String(chunkRaw);
+                        }
+
+                        const div = document.createElement('div');
+                        div.className = 'policy-chunk-card';
+                        div.innerHTML = `
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="policy-citation">${citationText}</span>
+                                ${scoreText ? `<span class="policy-score">${scoreText}</span>` : `<span class="policy-score">Ref #${index + 1}</span>`}
+                            </div>
+                            <p class="text-slate-300 text-xs leading-relaxed">${chunkText}</p>
+                        `;
+                        chunksContainer.appendChild(div);
+                    });
+                } else {
+                    chunksContainer.innerHTML = '<div class="text-xs text-slate-500 italic py-2">No policy documents retrieved (fast mode or RAG not indexed).</div>';
+                }
             }
 
             // Arbitrator Result
@@ -767,6 +1029,9 @@
                     })
                 });
                 const result = await response.json();
+
+                // Persist the decision result
+                appDecisions[currentApp.application_id] = result;
                 
                 // Show final status
                 const finalStatusContainer = document.getElementById('final-status-container');
@@ -790,8 +1055,8 @@
                     setNodeState('decision', 'active');
                 }
 
-                // Re-render apps list to show updated status live in the sidebar!
-                fetchApplications();
+                // Re-render apps list to show updated status live in the sidebar
+                renderApplications(allApps);
                 
                 // Smooth scroll to final status
                 finalStatusContainer.scrollIntoView({ behavior: 'smooth' });
@@ -800,63 +1065,25 @@
             }
         }
 
-        function resetCurrentProfile() {
-            if (!currentApp) return;
-            resetNodes();
-            document.getElementById('pipeline-results').classList.add('hidden');
-            document.getElementById('final-status-container').classList.add('hidden');
-            
-            // Reset decision form inputs
-            document.getElementById('officer-id').value = 'OFFICER-01';
-            document.getElementById('officer-reason').value = '';
-            
-            // Reset decision select dropdown based on default / recommendation
-            if (currentApp.expected_recommendation === 'approve') {
-                document.getElementById('officer-decision').value = 'approve';
-            } else if (currentApp.expected_recommendation === 'deny') {
-                document.getElementById('officer-decision').value = 'deny';
-            } else {
-                document.getElementById('officer-decision').value = 'override_approve';
+        function resetAllProfiles() {
+            // Clear all persisted state
+            appStatuses = {};
+            appResults = {};
+            appDecisions = {};
+
+            // Initialize statuses fresh for all apps
+            allApps.forEach(app => {
+                appStatuses[app.application_id] = 'new';
+            });
+
+            // If an app is currently selected, clear its view too
+            if (currentApp) {
+                resetNodes();
+                clearResults();
             }
 
-            // Clear results text fields to prevent stale flashing
-            document.getElementById('kyc-badge').className = 'status-badge badge-pending';
-            document.getElementById('kyc-badge').innerText = 'Pending';
-            document.getElementById('kyc-name').innerText = '---';
-            document.getElementById('kyc-income').innerText = '---';
-            document.getElementById('kyc-employer').innerText = '---';
-            document.getElementById('kyc-confidence').innerText = '---';
-            document.getElementById('kyc-fraud-alert').classList.add('hidden');
-            
-            document.getElementById('credit-badge').className = 'status-badge badge-pending';
-            document.getElementById('credit-badge').innerText = 'Pending';
-            document.getElementById('credit-score').innerText = '---';
-            document.getElementById('credit-default').innerText = '---';
-            document.getElementById('credit-dti').innerText = '---';
-            document.getElementById('credit-confidence').innerText = '---';
-            document.getElementById('credit-reason').innerText = '---';
-            
-            document.getElementById('policy-badge').className = 'status-badge badge-pending';
-            document.getElementById('policy-badge').innerText = 'Pending';
-            document.getElementById('policy-ltv').innerText = '---';
-            document.getElementById('policy-max-dti').innerText = '---';
-            document.getElementById('policy-violations-container').classList.add('hidden');
-            document.getElementById('policy-violations-list').innerHTML = '';
-            document.getElementById('policy-chunks').innerHTML = '';
-            
-            document.getElementById('arbitrator-badge').className = 'status-badge badge-pending';
-            document.getElementById('arbitrator-badge').innerText = 'Pending';
-            document.getElementById('arbitrator-agreement').innerText = '---';
-            document.getElementById('arbitrator-summary').innerText = '---';
-            document.getElementById('arbitrator-confidence').innerText = '---';
-            document.getElementById('arbitrator-flags-container').classList.add('hidden');
-            document.getElementById('arbitrator-flags-list').innerHTML = '';
-
-            document.getElementById('final-status-value').innerText = '---';
-
-            // Reset dynamic status in sidebar and re-render
-            appStatuses[currentApp.application_id] = 'new';
-            fetchApplications();
+            // Re-render sidebar
+            renderApplications(allApps);
         }
 
         // Init

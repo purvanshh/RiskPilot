@@ -52,7 +52,9 @@
       }
     ],
     "expected_recommendation": "approve",
-    "description": "Test Case 1: Clean Approval. Happy path, unanimous agreement, high confidence."
+    "description": "Test Case 1: Clean Approval. Happy path, unanimous agreement, high confidence.",
+    "approve_reasons": ["Strong income-to-debt ratio (DTI ~18%)", "3-year employment stability at TechCorp", "LTV of 71% well below 80% limit", "All four documents verified at high confidence"],
+    "deny_reasons": []
   },
   {
     "application_id": "APP-002",
@@ -97,7 +99,9 @@
       }
     ],
     "expected_recommendation": "deny",
-    "description": "Test Case 2: Clean Denial. High DTI, short employment history, high loan-to-value ratio."
+    "description": "Test Case 2: Clean Denial. High DTI, short employment history, high loan-to-value ratio.",
+    "approve_reasons": [],
+    "deny_reasons": ["DTI exceeds 50% hard cap (55%) — automatic denial", "LTV of 92.6% far exceeds 85% maximum", "Employment tenure of only 8 months below 12-month requirement", "Missing employment letter document"]
   },
   {
     "application_id": "APP-003",
@@ -151,7 +155,9 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 3: Borderline Disagreement. Credit score borderline, LTV slightly exceeds threshold (82%)."
+    "description": "Test Case 3: Borderline Disagreement. Credit score borderline, LTV slightly exceeds threshold (82%).",
+    "approve_reasons": ["Adequate 2-year employment at BuildCorp", "Moderate income with 35% DTI"],
+    "deny_reasons": ["LTV of 82% exceeds standard 80% limit", "Borderline credit score requires exception approval", "DTI above 35% threshold for LTV exceptions"]
   },
   {
     "application_id": "APP-004",
@@ -185,7 +191,9 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 4: Missing Document. Missing bank statement & employment letter."
+    "description": "Test Case 4: Missing Document. Missing bank statement & employment letter.",
+    "approve_reasons": ["Strong income ($90K/yr) and low DTI (~20%)", "4-year employment — excellent stability", "LTV of 75% safely below threshold"],
+    "deny_reasons": ["Bank statement is missing — income cannot be independently verified", "Employment letter absent — cannot confirm current employer status", "Policy requires minimum 2 income-verifying documents"]
   },
   {
     "application_id": "APP-005",
@@ -239,7 +247,9 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 5: Policy Edge Case. Employment stability is 11 months (<12 months requirement). Arbitrator flag required."
+    "description": "Test Case 5: Policy Edge Case. Employment stability is 11 months (<12 months requirement). Arbitrator flag required.",
+    "approve_reasons": ["High income ($100K) with manageable 38% DTI", "LTV of 79% just under 80% limit", "Documents fully verified"],
+    "deny_reasons": ["Employment tenure is 11 months — 1 month short of the 12-month minimum", "Policy mandates review for sub-12-month employment regardless of other metrics"]
   },
   {
     "application_id": "APP-006",
@@ -285,7 +295,9 @@
     ],
     "expected_recommendation": "review_required",
     "fraud_expected": true,
-    "description": "Test Case 6 (Bonus): Fraud Flag. Name mismatch between ID ('Frank Forger') and pay slip ('Francis Forgett'). KYC agent must detect inconsistency and route immediately to human_review, bypassing credit and policy assessment."
+    "description": "Test Case 6 (Bonus): Fraud Flag. Name mismatch between ID ('Frank Forger') and pay slip ('Francis Forgett'). KYC agent must detect inconsistency and route immediately to human_review, bypassing credit and policy assessment.",
+    "approve_reasons": [],
+    "deny_reasons": ["FRAUD ALERT: Name on ID ('Frank Forger') does not match pay slip ('Francis Forgett')", "Pay slip validation status is invalid with only 30% confidence", "Bank statement shows ambiguous name 'F. Forger' — inconclusive match", "Application bypasses standard pipeline and escalates directly to HITL review"]
   },
   {
     "application_id": "APP-007",
@@ -330,7 +342,9 @@
       }
     ],
     "expected_recommendation": "deny",
-    "description": "Test Case 7: Clean Denial. High DTI (72%) exceeding the standard and hard limit thresholds."
+    "description": "Test Case 7: Clean Denial. High DTI (72%) exceeding the standard and hard limit thresholds.",
+    "approve_reasons": [],
+    "deny_reasons": ["DTI of 72% far exceeds 50% hard cap — automatic denial", "Monthly debt ($3,000) consumes 72% of monthly income ($4,166)", "No realistic exception pathway exists at this DTI level"]
   },
   {
     "application_id": "APP-008",
@@ -385,7 +399,9 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 8: Borderline DTI. DTI ratio of 42% is close to the 45% standard limit."
+    "description": "Test Case 8: Borderline DTI. DTI ratio of 42% is close to the 45% standard limit.",
+    "approve_reasons": ["High income ($120K) with strong earning potential", "LTV of 78.4% safely below 80% threshold", "All documents verified at high confidence"],
+    "deny_reasons": ["DTI of 42% is close to 45% standard limit — borderline case", "Employment of only 15 months is relatively recent", "Any additional debt would push DTI over policy limit"]
   },
   {
     "application_id": "APP-009",
@@ -430,7 +446,9 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 9: Low Confidence Document. Bank statement has a low confidence score (55%), triggering officer review."
+    "description": "Test Case 9: Low Confidence Document. Bank statement has a low confidence score (55%), triggering officer review.",
+    "approve_reasons": ["Favorable DTI of ~21% with strong income", "LTV of 72% well within limits", "2.5-year employment at AdlerConsulting"],
+    "deny_reasons": ["Bank statement confidence is only 55% — below 70% minimum threshold", "Cannot independently verify income without high-confidence bank statement", "Officer must manually inspect and approve the bank statement before proceeding"]
   },
   {
     "application_id": "APP-010",
@@ -474,6 +492,568 @@
       }
     ],
     "expected_recommendation": "review_required",
-    "description": "Test Case 10: Income Mismatch. Monthly income on pay slip ($5,000) vs bank statement ($3,500) differs by 30% (>20% limit)."
+    "description": "Test Case 10: Income Mismatch. Monthly income on pay slip ($5,000) vs bank statement ($3,500) differs by 30% (>20% limit).",
+    "approve_reasons": ["Very low monthly debt ($500) — excellent capacity", "Conservative loan amount with manageable LTV of 67%", "2-year employment at Military"],
+    "deny_reasons": ["Income discrepancy: pay slip ($5,000/mo) vs bank statement ($3,500/mo) — 30% gap exceeds 20% limit", "Cannot determine actual income without resolving the discrepancy", "Manual officer review required to reconcile income figures"]
+  },
+  {
+    "application_id": "APP-011",
+    "applicant_data": {
+      "name": "Karen Mitchell",
+      "income": 145000,
+      "monthly_debt": 2800,
+      "loan_amount": 550000,
+      "property_value": 750000,
+      "employment_months": 72
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Karen Mitchell, DOB: 03/22/1979",
+        "validation_status": "valid",
+        "confidence": 0.98,
+        "extracted_fields": {
+          "name": "Karen Mitchell",
+          "dob": "03/22/1979"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Karen Mitchell. Monthly deposit: $12,083. Balance: $85,000. Monthly obligations: $2,800.",
+        "validation_status": "valid",
+        "confidence": 0.97,
+        "extracted_fields": {
+          "income_monthly": 12083,
+          "monthly_debt": 2800
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Karen Mitchell. Employer: Goldman Sachs. Gross pay: $12,083/mo.",
+        "validation_status": "valid",
+        "confidence": 0.98,
+        "extracted_fields": {
+          "employer": "Goldman Sachs",
+          "income_monthly": 12083
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Karen Mitchell has been a Senior VP at Goldman Sachs for 6 years. Salary: $145,000/yr.",
+        "validation_status": "valid",
+        "confidence": 0.97,
+        "extracted_fields": {
+          "employer": "Goldman Sachs",
+          "employment_months": 72
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 11: Premium Approval. High-income executive with excellent financials. Unanimous approval expected.",
+    "approve_reasons": ["DTI of only 23% — well below the 45% standard limit", "LTV of 73.3% safely under 80% threshold", "6 years at Goldman Sachs — exceptional employment stability", "All 4 documents verified at 97-98% confidence", "Large cash reserves ($85K balance) indicate financial resilience"],
+    "deny_reasons": []
+  },
+  {
+    "application_id": "APP-012",
+    "applicant_data": {
+      "name": "Liam O'Connor",
+      "income": 42000,
+      "monthly_debt": 1800,
+      "loan_amount": 175000,
+      "property_value": 195000,
+      "employment_months": 3
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Liam O'Connor, DOB: 07/14/1998",
+        "validation_status": "valid",
+        "confidence": 0.92,
+        "extracted_fields": {
+          "name": "Liam O'Connor",
+          "dob": "07/14/1998"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $3,500. Balance: $800. Monthly obligations: $1,800.",
+        "validation_status": "valid",
+        "confidence": 0.88,
+        "extracted_fields": {
+          "income_monthly": 3500,
+          "monthly_debt": 1800
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee Name: Liam O'Connor. Employer: StartupCo. Gross pay: $3,500.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "employer": "StartupCo",
+          "income_monthly": 3500
+        }
+      }
+    ],
+    "expected_recommendation": "deny",
+    "description": "Test Case 12: New Employee Denial. Only 3 months at a startup, very low cash reserves, LTV at 90%.",
+    "approve_reasons": [],
+    "deny_reasons": ["Employment tenure of only 3 months — hard denial condition (minimum 6 months)", "LTV of 89.7% exceeds hard cap of 85%", "DTI of 51.4% exceeds 50% hard cap", "Very low cash reserves ($800) — no financial buffer", "Recent hire at a startup carries significant employment risk"]
+  },
+  {
+    "application_id": "APP-013",
+    "applicant_data": {
+      "name": "Mia Thornton",
+      "income": 72000,
+      "monthly_debt": 2000,
+      "loan_amount": 265000,
+      "property_value": 340000,
+      "employment_months": 20
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Mia Thornton, DOB: 11/30/1991",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Mia Thornton",
+          "dob": "11/30/1991"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Mia Thornton. Monthly deposit: $6,000. Monthly debt: $2,000.",
+        "validation_status": "valid",
+        "confidence": 0.91,
+        "extracted_fields": {
+          "income_monthly": 6000,
+          "monthly_debt": 2000
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Mia Thornton. Employer: HealthFirst Hospital. Gross pay: $6,000.",
+        "validation_status": "valid",
+        "confidence": 0.94,
+        "extracted_fields": {
+          "employer": "HealthFirst Hospital",
+          "income_monthly": 6000
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Mia Thornton is a Registered Nurse at HealthFirst Hospital, employed for 20 months.",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "employer": "HealthFirst Hospital",
+          "employment_months": 20
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 13: Steady Professional Approval. Nurse with consistent income, reasonable DTI and LTV.",
+    "approve_reasons": ["DTI of 33.3% comfortably within the 45% limit", "LTV of 77.9% safely below 80% threshold", "Stable public-sector healthcare employment for 20 months", "Income independently verified across all four documents"],
+    "deny_reasons": []
+  },
+  {
+    "application_id": "APP-014",
+    "applicant_data": {
+      "name": "Nathan Drake",
+      "income": 55000,
+      "monthly_debt": 2100,
+      "loan_amount": 190000,
+      "property_value": 210000,
+      "employment_months": 14
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Nathan Drake, DOB: 06/10/1987",
+        "validation_status": "valid",
+        "confidence": 0.94,
+        "extracted_fields": {
+          "name": "Nathan Drake",
+          "dob": "06/10/1987"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Monthly deposit: $4,583. Monthly debt: $2,100.",
+        "validation_status": "valid",
+        "confidence": 0.89,
+        "extracted_fields": {
+          "income_monthly": 4583,
+          "monthly_debt": 2100
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Nathan Drake. Employer: AdventureMedia. Gross pay: $4,583.",
+        "validation_status": "valid",
+        "confidence": 0.92,
+        "extracted_fields": {
+          "employer": "AdventureMedia",
+          "income_monthly": 4583
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Nathan Drake has been employed at AdventureMedia for 14 months as a content producer.",
+        "validation_status": "valid",
+        "confidence": 0.90,
+        "extracted_fields": {
+          "employer": "AdventureMedia",
+          "employment_months": 14
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 14: High LTV Borderline. LTV is 90.5% which far exceeds limits, despite acceptable DTI.",
+    "approve_reasons": ["DTI of 45.8% is technically at the limit", "All documents pass KYC verification"],
+    "deny_reasons": ["LTV of 90.5% exceeds the absolute 85% hard cap", "LTV exception requires credit score above 720 AND DTI below 35% — neither met", "DTI of 45.8% is right at the boundary, leaving no safety margin"]
+  },
+  {
+    "application_id": "APP-015",
+    "applicant_data": {
+      "name": "Olivia Chen",
+      "income": 110000,
+      "monthly_debt": 1200,
+      "loan_amount": 320000,
+      "property_value": 420000,
+      "employment_months": 60
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Olivia Chen, DOB: 09/15/1984",
+        "validation_status": "valid",
+        "confidence": 0.97,
+        "extracted_fields": {
+          "name": "Olivia Chen",
+          "dob": "09/15/1984"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Olivia Chen. Monthly deposit: $9,166. Balance: $42,000. Monthly obligations: $1,200.",
+        "validation_status": "valid",
+        "confidence": 0.96,
+        "extracted_fields": {
+          "income_monthly": 9166,
+          "monthly_debt": 1200
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Olivia Chen. Employer: NovaTech Systems. Gross pay: $9,166.",
+        "validation_status": "valid",
+        "confidence": 0.97,
+        "extracted_fields": {
+          "employer": "NovaTech Systems",
+          "income_monthly": 9166
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Olivia Chen is a Principal Engineer at NovaTech Systems, tenure of 5 years.",
+        "validation_status": "valid",
+        "confidence": 0.96,
+        "extracted_fields": {
+          "employer": "NovaTech Systems",
+          "employment_months": 60
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 15: Elite Approval. 5-year senior engineer with very low DTI and pristine documents.",
+    "approve_reasons": ["DTI of just 13.1% — exceptionally low risk", "LTV of 76.2% well within safe thresholds", "5-year tenure at NovaTech — outstanding employment stability", "Strong savings ($42K balance) provide financial safety net", "All 4 documents verified at 96-97% confidence — highest tier"],
+    "deny_reasons": []
+  },
+  {
+    "application_id": "APP-016",
+    "applicant_data": {
+      "name": "Peter Vance",
+      "income": 48000,
+      "monthly_debt": 1600,
+      "loan_amount": 160000,
+      "property_value": 200000,
+      "employment_months": 18
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Peter Vance, DOB: 02/28/1993",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "name": "Peter Vance",
+          "dob": "02/28/1993"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Peter Vance. Monthly deposit: $4,000. Monthly obligations: $1,600.",
+        "validation_status": "valid",
+        "confidence": 0.87,
+        "extracted_fields": {
+          "income_monthly": 4000,
+          "monthly_debt": 1600
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Peter Vance. Employer: LocalSchool District. Gross pay: $4,000.",
+        "validation_status": "valid",
+        "confidence": 0.92,
+        "extracted_fields": {
+          "employer": "LocalSchool District",
+          "income_monthly": 4000
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Peter Vance is a certified teacher at LocalSchool District, employed 18 months.",
+        "validation_status": "valid",
+        "confidence": 0.91,
+        "extracted_fields": {
+          "employer": "LocalSchool District",
+          "employment_months": 18
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 16: Public Sector Approval. Teacher with stable government employment, clean DTI and LTV.",
+    "approve_reasons": ["DTI of 40% within the 45% policy limit", "LTV of 80% exactly at standard threshold — qualifies for exception given stable public employment", "Government sector employment reduces default risk", "All 4 documents verified consistently"],
+    "deny_reasons": []
+  },
+  {
+    "application_id": "APP-017",
+    "applicant_data": {
+      "name": "Quinn Roberts",
+      "income": 95000,
+      "monthly_debt": 4800,
+      "loan_amount": 350000,
+      "property_value": 430000,
+      "employment_months": 28
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Quinn Roberts, DOB: 04/11/1986",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "name": "Quinn Roberts",
+          "dob": "04/11/1986"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Quinn Roberts. Monthly deposit: $7,916. Monthly obligations: $4,800.",
+        "validation_status": "valid",
+        "confidence": 0.91,
+        "extracted_fields": {
+          "income_monthly": 7916,
+          "monthly_debt": 4800
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Quinn Roberts. Employer: SalesCo. Gross pay: $7,916.",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "employer": "SalesCo",
+          "income_monthly": 7916
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Quinn Roberts has been a Sales Director at SalesCo for 28 months.",
+        "validation_status": "valid",
+        "confidence": 0.92,
+        "extracted_fields": {
+          "employer": "SalesCo",
+          "employment_months": 28
+        }
+      }
+    ],
+    "expected_recommendation": "deny",
+    "description": "Test Case 17: High Debt Denial. High existing debt burden results in 60.6% DTI, far exceeding the 50% hard cap.",
+    "approve_reasons": [],
+    "deny_reasons": ["DTI of 60.6% exceeds the 50% hard cap — automatic denial", "Monthly debt ($4,800) consumes the majority of disposable income", "Even with $95K income, pre-existing obligations make this unsustainable", "High-income earner whose lifestyle debt load eliminates borrowing capacity"]
+  },
+  {
+    "application_id": "APP-018",
+    "applicant_data": {
+      "name": "Sara Patel",
+      "income": 68000,
+      "monthly_debt": 1400,
+      "loan_amount": 230000,
+      "property_value": 295000,
+      "employment_months": 42
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Sara Patel, DOB: 01/05/1990",
+        "validation_status": "valid",
+        "confidence": 0.96,
+        "extracted_fields": {
+          "name": "Sara Patel",
+          "dob": "01/05/1990"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: S. Patel. Monthly deposit: $5,666. Monthly obligations: $1,400.",
+        "validation_status": "needs_review",
+        "confidence": 0.62,
+        "extracted_fields": {
+          "income_monthly": 5666,
+          "monthly_debt": 1400
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Sara Patel. Employer: PharmaCorp. Gross pay: $5,666.",
+        "validation_status": "valid",
+        "confidence": 0.96,
+        "extracted_fields": {
+          "employer": "PharmaCorp",
+          "income_monthly": 5666
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Sara Patel has been a Research Analyst at PharmaCorp for 3.5 years.",
+        "validation_status": "valid",
+        "confidence": 0.95,
+        "extracted_fields": {
+          "employer": "PharmaCorp",
+          "employment_months": 42
+        }
+      }
+    ],
+    "expected_recommendation": "review_required",
+    "description": "Test Case 18: Ambiguous Name on Bank Statement. Bank statement shows 'S. Patel' vs full name 'Sara Patel', triggering a confidence review.",
+    "approve_reasons": ["DTI of 24.7% is excellent", "LTV of 78% within safe threshold", "3.5 years of stable pharmaceutical employment"],
+    "deny_reasons": ["Bank statement uses initial 'S. Patel' — name match is ambiguous", "Bank confidence is 62% — below 70% minimum for auto-approval", "Identity verification incomplete without high-confidence name match on bank statement"]
+  },
+  {
+    "application_id": "APP-019",
+    "applicant_data": {
+      "name": "Tyler Brooks",
+      "income": 35000,
+      "monthly_debt": 600,
+      "loan_amount": 90000,
+      "property_value": 140000,
+      "employment_months": 48
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Tyler Brooks, DOB: 08/19/1975",
+        "validation_status": "valid",
+        "confidence": 0.94,
+        "extracted_fields": {
+          "name": "Tyler Brooks",
+          "dob": "08/19/1975"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Tyler Brooks. Monthly deposit: $2,916. Monthly obligations: $600.",
+        "validation_status": "valid",
+        "confidence": 0.91,
+        "extracted_fields": {
+          "income_monthly": 2916,
+          "monthly_debt": 600
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Tyler Brooks. Employer: County Public Works. Gross pay: $2,916.",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "employer": "County Public Works",
+          "income_monthly": 2916
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Tyler Brooks is a Civil Technician at County Public Works, employed for 4 years.",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "employer": "County Public Works",
+          "employment_months": 48
+        }
+      }
+    ],
+    "expected_recommendation": "approve",
+    "description": "Test Case 19: Small Loan Modest Income. Lower-income applicant applying for a modest loan. Clean profile with low DTI.",
+    "approve_reasons": ["DTI of 20.6% — very manageable for income level", "LTV of 64.3% — well within thresholds", "4 years stable government employment", "Low loan amount ($90K) proportionate to income and property value", "All documents verified consistently"],
+    "deny_reasons": []
+  },
+  {
+    "application_id": "APP-020",
+    "applicant_data": {
+      "name": "Vera Kozlov",
+      "income": 77000,
+      "monthly_debt": 2300,
+      "loan_amount": 280000,
+      "property_value": 310000,
+      "employment_months": 5
+    },
+    "documents": [
+      {
+        "document_type": "id_proof",
+        "extracted_text": "ID Proof: Vera Kozlov, DOB: 12/03/1989",
+        "validation_status": "valid",
+        "confidence": 0.93,
+        "extracted_fields": {
+          "name": "Vera Kozlov",
+          "dob": "12/03/1989"
+        }
+      },
+      {
+        "document_type": "bank_statement",
+        "extracted_text": "Account Holder: Vera Kozlov. Monthly deposit: $6,416. Monthly obligations: $2,300.",
+        "validation_status": "valid",
+        "confidence": 0.89,
+        "extracted_fields": {
+          "income_monthly": 6416,
+          "monthly_debt": 2300
+        }
+      },
+      {
+        "document_type": "pay_slip",
+        "extracted_text": "Employee: Vera Kozlov. Employer: CryptoVentures. Gross pay: $6,416.",
+        "validation_status": "valid",
+        "confidence": 0.88,
+        "extracted_fields": {
+          "employer": "CryptoVentures",
+          "income_monthly": 6416
+        }
+      },
+      {
+        "document_type": "employment_letter",
+        "extracted_text": "Vera Kozlov joined CryptoVentures as a Blockchain Engineer 5 months ago.",
+        "validation_status": "valid",
+        "confidence": 0.87,
+        "extracted_fields": {
+          "employer": "CryptoVentures",
+          "employment_months": 5
+        }
+      }
+    ],
+    "expected_recommendation": "deny",
+    "description": "Test Case 20: Hard Denial — Short Tenure & High LTV. 5-month employment (below 6-month hard minimum) and LTV of 90.3% both trigger automatic denials.",
+    "approve_reasons": [],
+    "deny_reasons": ["Employment of 5 months is below 6-month absolute minimum — hard denial", "LTV of 90.3% exceeds the 85% hard cap — second hard denial trigger", "Two independent hard denial conditions make override unlikely", "Employment at a volatile crypto sector startup adds additional risk"]
   }
 ]

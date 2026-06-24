@@ -1,5 +1,6 @@
+import json
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from src.graph.state import (
     LoanApplicationState,
@@ -48,13 +49,17 @@ def policy_node(state: LoanApplicationState) -> Dict[str, Any]:
             f"What is the maximum LTV ratio allowed for loan amount {loan_amount}?",
         ]
 
-        retrieved_chunks: List[str] = []
+        retrieved_chunk_objects = []
+        seen_texts = set()
         for q in queries:
             chunks = policy_retriever(q)
-            retrieved_chunks.extend(chunks)
+            for chunk in chunks:
+                if chunk.text not in seen_texts:
+                    seen_texts.add(chunk.text)
+                    retrieved_chunk_objects.append(chunk)
 
-        # Remove duplicates while keeping order
-        retrieved_chunks = list(dict.fromkeys(retrieved_chunks))
+        # Build a plain list of strings for policy_validator (citation references)
+        retrieved_chunks = retrieved_chunk_objects
 
         # 3. Policy validation (Checks rules based on configuration/policy text)
         validation_results = policy_validator(
@@ -65,15 +70,27 @@ def policy_node(state: LoanApplicationState) -> Dict[str, Any]:
             policy_chunks=retrieved_chunks,
         )
 
+        # Serialize chunks as structured dicts for the UI (text + citation + score)
+        serialized_chunks = [
+            {
+                "text": c.text,
+                "citation": c.citation(),
+                "score": round(c.score, 4),
+            }
+            for c in retrieved_chunk_objects[:5]
+        ]
+
         policy_result = PolicyCheckOutput(
             policy_passed=validation_results["passed"],
             violations=validation_results["violations"],
             ltv_ratio=round(ltv, 4),
             min_credit_requirement_met=validation_results["min_credit_met"],
             max_dti_threshold=validation_results["max_dti_threshold"],
-            retrieved_policy_chunks=retrieved_chunks[:5],  # Store top 5 chunks
+            retrieved_policy_chunks=[json.dumps(c) for c in serialized_chunks],  # JSON strings
             reasoning=validation_results["reasoning"],
         )
+        # Attach structured chunks as extra attribute for serialization
+        policy_result._structured_chunks = serialized_chunks
 
     except Exception as e:
         logger.error(f"Error in Policy Agent: {str(e)}")
