@@ -17,12 +17,24 @@ logger = logging.getLogger(__name__)
 def retry_node(state: LoanApplicationState) -> Dict[str, Any]:
     """
     Retry node triggered when documents are missing.
-    In production, this would notify the user. For boilerplate, we log and halt.
+    If an officer decision is already present (e.g. officer manually reviewed
+    and chose to override), apply it. Otherwise mark as under_review.
     """
     logger.info(f"Application {state.application_id} placed in retry. Awaiting document upload.")
     error_log = list(state.error_log)
-    error_log.append("Application suspended: Missing critical documents.")
 
+    if state.human_decision:
+        decision = state.human_decision.decision
+        if decision in ["approve", "override_approve"]:
+            final_status = "approved"
+        else:
+            final_status = "denied"
+        logger.info(
+            f"Officer override found in retry node: {decision}. Final status: {final_status}."
+        )
+        return {"final_status": final_status, "error_log": error_log}
+
+    error_log.append("Application suspended: Missing critical documents.")
     return {"final_status": "under_review", "error_log": error_log}
 
 

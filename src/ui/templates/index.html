@@ -5,99 +5,428 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>RiskPilot | Multi-Agent Underwriter</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
+        /* ============================================================
+           DESIGN SYSTEM — Color Palette
+           Primary  : #334155  (Slate Blue-Grey)
+           Secondary: #727781  (Mid Grey)
+           Tertiary : #503D1E  (Warm Brown)
+           Neutral  : #777778  (Cool Grey)
+           Surface  : #141414  (Near Black)
+           Card     : #1c1c1e  (Elevated Dark)
+           Border   : #2a2a2e  (Subtle line)
+        ============================================================ */
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent body scroll — panels handle their own */
+        }
+
         body {
-            background-color: #0b1326;
-            color: #dae2fd;
+            background-color: #141414;
+            color: #e2e4e9;
             font-family: 'Inter', sans-serif;
         }
         .font-headline {
-            font-family: 'Hanken Grotesk', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .font-mono-custom {
             font-family: 'JetBrains Mono', monospace;
         }
-        .glass-card {
-            background: rgba(23, 31, 51, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+        /* ---- Scrollbar ---- */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #727781; }
+
+        /* ---- Layout Shell ---- */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-        .glass-card:hover {
-            border-color: rgba(85, 141, 255, 0.25);
+        .app-header {
+            flex-shrink: 0;
         }
-        .active-card {
-            background: rgba(85, 141, 255, 0.08);
-            border-color: rgba(85, 141, 255, 0.4) !important;
+        .app-workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden; /* children manage their own overflow */
+            min-height: 0;   /* critical for flex children to shrink */
         }
-        .decision-panel {
-            border: 1px solid rgba(85, 141, 255, 0.3);
-            background: linear-gradient(180deg, rgba(85, 141, 255, 0.04) 0%, rgba(11, 19, 38, 0) 100%);
+        .sidebar-panel {
+            width: 260px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* inner list scrolls */
+            border-right: 1px solid #2a2a2e;
+            background: #1c1c1e;
         }
-        ::-webkit-scrollbar {
-            width: 6px;
+        .sidebar-header {
+            flex-shrink: 0;
+            padding: 16px;
+            border-bottom: 1px solid #2a2a2e;
         }
-        ::-webkit-scrollbar-track {
-            background: #0b1326;
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #222a3d;
-            border-radius: 10px;
+        .main-panel {
+            flex: 1;
+            overflow-y: auto;
+            background: #141414;
+            min-width: 0;
         }
-        
-        /* Status Badges */
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-        }
-        .badge-pending {
-            background-color: rgba(148, 163, 184, 0.08);
-            color: #94a3b8;
-            border-color: rgba(148, 163, 184, 0.18);
-        }
-        .badge-review {
-            background-color: rgba(255, 185, 95, 0.08);
-            color: #ffb95f;
-            border-color: rgba(255, 185, 95, 0.18);
-        }
-        .badge-approved {
-            background-color: rgba(78, 222, 163, 0.08);
-            color: #4edea3;
-            border-color: rgba(78, 222, 163, 0.18);
-        }
-        .badge-denied {
-            background-color: rgba(255, 180, 171, 0.08);
-            color: #ffb4ab;
-            border-color: rgba(255, 180, 171, 0.18);
-        }
-        .badge-idle {
-            background-color: rgba(148, 163, 184, 0.04);
-            color: #64748b;
-            border-color: rgba(148, 163, 184, 0.08);
+        .main-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        /* Pipeline Cards Lift Effects */
-        .pipeline-card {
-            background-color: #171f33; 
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        /* ---- Header ---- */
+        .header-bar {
+            background: #1c1c1e;
+            border-bottom: 1px solid #2a2a2e;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* ---- Application Cards (sidebar) ---- */
+        .app-card {
+            background: #242428;
+            border: 1px solid #2a2a2e;
+            border-radius: 10px;
+            padding: 12px 14px;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.18s ease, background 0.18s ease;
         }
-        .pipeline-card:hover {
+        .app-card:hover {
+            border-color: #334155;
+            background: #2a2a30;
+        }
+        .app-card.active {
+            background: rgba(51, 65, 85, 0.25);
+            border-color: #334155;
+            box-shadow: 0 0 0 1px rgba(51,65,85,0.4) inset;
+        }
+
+        /* ---- Status Badges ---- */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .badge-pending {
+            background: rgba(114,119,129,0.12);
+            color: #9ca3af;
+            border-color: rgba(114,119,129,0.22);
+        }
+        .badge-review {
+            background: rgba(80,61,30,0.25);
+            color: #c9a96e;
+            border-color: rgba(80,61,30,0.45);
+        }
+        .badge-approved {
+            background: rgba(52,211,153,0.1);
+            color: #34d399;
+            border-color: rgba(52,211,153,0.22);
+        }
+        .badge-denied {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border-color: rgba(239,68,68,0.22);
+        }
+        .badge-idle {
+            background: rgba(114,119,129,0.06);
+            color: #6b7280;
+            border-color: rgba(114,119,129,0.1);
+        }
+
+        /* ---- Info Cards (metric tiles) ---- */
+        .metric-card {
+            background: #1c1c1e;
+            border: 1px solid #2a2a2e;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: border-color 0.2s;
+        }
+        .metric-card:hover { border-color: #334155; }
+        .metric-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.6px; color: #727781; font-weight: 600; }
+        .metric-value { font-size: 1.4rem; font-weight: 800; color: #e2e4e9; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* ---- Section Cards ---- */
+        .section-card {
+            background: #1c1c1e;
+            border: 1px solid #2a2a2e;
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .section-card-primary {
+            background: #1c1c1e;
+            border: 1.5px solid #334155;
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .decision-card {
+            background: linear-gradient(135deg, rgba(51,65,85,0.12) 0%, rgba(28,28,30,0) 100%);
+            border: 1px solid rgba(51,65,85,0.4);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        /* ---- Pipeline Nodes ---- */
+        .pipeline-node {
+            background: #242428;
+            border: 1px solid #2a2a2e;
+            border-radius: 12px;
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+        }
+        .pipeline-node:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(85, 141, 255, 0.2);
-            border-color: rgba(85, 141, 255, 0.25);
-            background-color: #1b253b;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            border-color: #334155;
         }
+        .pipeline-node.node-active {
+            border-color: #334155;
+            background: rgba(51,65,85,0.2);
+            transform: scale(1.04);
+            box-shadow: 0 0 0 2px rgba(51,65,85,0.3), 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .pipeline-node.node-passed {
+            border-color: rgba(52,211,153,0.4);
+            background: rgba(52,211,153,0.05);
+        }
+        .pipeline-node.node-failed {
+            border-color: rgba(239,68,68,0.4);
+            background: rgba(239,68,68,0.05);
+        }
+
+        /* ---- Rationale panels ---- */
+        .rationale-approve {
+            background: rgba(52,211,153,0.05);
+            border: 1px solid rgba(52,211,153,0.18);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .rationale-deny {
+            background: rgba(239,68,68,0.05);
+            border: 1px solid rgba(239,68,68,0.18);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .rationale-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 5px 0;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .rationale-item:last-child { border-bottom: none; }
+
+        /* ---- Policy Chunks ---- */
+        .policy-chunk-card {
+            background: rgba(51,65,85,0.08);
+            border: 1px solid rgba(51,65,85,0.22);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .policy-citation {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            color: #9baabf;
+            background: rgba(51,65,85,0.2);
+            padding: 2px 7px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        .policy-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            color: #727781;
+        }
+
+        /* ---- Buttons ---- */
+        .btn-primary {
+            background: #334155;
+            color: #e2e4e9;
+            border: 1px solid rgba(51,65,85,0.6);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary:hover {
+            background: #3d4e65;
+            border-color: #4a5f78;
+        }
+        .btn-tertiary {
+            background: rgba(80,61,30,0.2);
+            color: #c9a96e;
+            border: 1px solid rgba(80,61,30,0.4);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-tertiary:hover {
+            background: rgba(80,61,30,0.35);
+            border-color: rgba(80,61,30,0.7);
+        }
+        .btn-run {
+            background: linear-gradient(135deg, #334155 0%, #3d4e65 100%);
+            color: #fff;
+            border: 1px solid #4a5f78;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 2px 10px rgba(51,65,85,0.3);
+        }
+        .btn-run:hover {
+            background: linear-gradient(135deg, #3d4e65 0%, #4a5f78 100%);
+            box-shadow: 0 4px 16px rgba(51,65,85,0.45);
+            transform: translateY(-1px);
+        }
+        .btn-submit {
+            background: #334155;
+            color: #fff;
+            border: 1px solid #4a5f78;
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            width: 100%;
+        }
+        .btn-submit:hover { background: #3d4e65; }
+
+        /* ---- Form elements ---- */
+        .form-input, .form-select, .form-textarea {
+            background: #141414;
+            border: 1px solid #2a2a2e;
+            border-radius: 8px;
+            color: #e2e4e9;
+            font-size: 0.82rem;
+            padding: 8px 12px;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.18s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #334155;
+        }
+        .form-select option { background: #1c1c1e; }
+        .form-textarea { resize: none; }
+        label.form-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #727781;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 5px;
+        }
+
+        /* ---- Welcome screen ---- */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: calc(100vh - 60px);
+            text-align: center;
+            padding: 32px;
+        }
+        .welcome-icon {
+            width: 80px; height: 80px;
+            background: rgba(51,65,85,0.2);
+            border: 1px solid #334155;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        /* ---- Violation items ---- */
+        .violation-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.18);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            color: #f87171;
+            margin-bottom: 6px;
+        }
+
+        /* ---- Final status box ---- */
+        .final-approved { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.06); }
+        .final-denied   { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.06);  }
+        .final-review   { border-color: rgba(80,61,30,0.4);   background: rgba(80,61,30,0.06);   }
+
+        /* ---- Expected recommendation badge ---- */
+        .rec-approve { background: rgba(52,211,153,0.08); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+        .rec-deny    { background: rgba(239,68,68,0.08);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .rec-review  { background: rgba(80,61,30,0.15);   color: #c9a96e; border: 1px solid rgba(80,61,30,0.35); }
+    </style>
 
         /* Rationale Cards */
         .rationale-approve {
@@ -164,14 +493,18 @@
                 extend: {
                     colors: {
                         brand: {
-                            bg: "#0b1326",
-                            card: "#171f33",
-                            border: "#2d3449",
-                            text: "#dae2fd",
-                            primary: "#558dff",
-                            success: "#4edea3",
-                            warning: "#ffb95f",
-                            danger: "#ffb4ab"
+                            bg:      "#141414",
+                            surface: "#1c1c1e",
+                            card:    "#242428",
+                            border:  "#2a2a2e",
+                            text:    "#e2e4e9",
+                            primary:   "#334155",
+                            secondary: "#727781",
+                            tertiary:  "#503D1E",
+                            neutral:   "#777778",
+                            success: "#34d399",
+                            warning: "#c9a96e",
+                            danger:  "#f87171"
                         }
                     }
                 }
@@ -179,91 +512,82 @@
         }
     </script>
 </head>
-<body class="min-h-screen flex flex-col font-sans">
+<body class="app-shell">
 
-    <!-- Header -->
-    <header class="border-b border-brand-border bg-brand-bg/85 sticky top-0 z-50 backdrop-blur-md px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <span class="material-symbols-outlined text-brand-primary text-3xl">shield_with_heart</span>
+    <!-- ═══ HEADER ═══ -->
+    <header class="app-header header-bar">
+        <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;background:rgba(51,65,85,0.25);border:1px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center">
+                <span class="material-symbols-outlined" style="color:#9baabf;font-size:20px">shield_with_heart</span>
+            </div>
             <div>
-                <h1 class="text-xl font-headline font-bold tracking-tight text-white">RiskPilot Underwriter</h1>
-                <p class="text-xs text-slate-400">Autonomous Multi-Agent Loan Risk Assessment System</p>
+                <h1 class="font-headline" style="font-size:1.05rem;font-weight:800;color:#e2e4e9;line-height:1.2">RiskPilot Underwriter</h1>
+                <p style="font-size:0.68rem;color:#727781;margin-top:1px">Autonomous Multi-Agent Loan Risk Assessment</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <label class="flex items-center space-x-2 cursor-pointer bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300">
-                <input type="checkbox" id="fast-mode-toggle" checked class="form-checkbox h-3.5 w-3.5 text-brand-primary rounded bg-brand-bg border-brand-border focus:ring-0">
-                <span>Fast Offline Demo (Instant)</span>
+        <div style="display:flex;align-items:center;gap:10px">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;color:#9ca3af">
+                <input type="checkbox" id="fast-mode-toggle" checked style="accent-color:#334155;width:13px;height:13px">
+                <span>Fast Offline Demo</span>
             </label>
-            <button id="reset-all-btn" onclick="resetAllProfiles()" class="btn-reset-all flex items-center space-x-2 font-semibold text-xs px-3 py-1.5 rounded-lg">
-                <span class="material-symbols-outlined text-sm">restart_alt</span>
+            <button id="reset-all-btn" onclick="resetAllProfiles()" class="btn-tertiary" style="padding:6px 12px;font-size:0.75rem">
+                <span class="material-symbols-outlined" style="font-size:15px">restart_alt</span>
                 <span>Reset All Profiles</span>
             </button>
-            <div class="flex items-center space-x-2 text-xs bg-brand-card border border-brand-border px-3 py-1.5 rounded-lg">
-                <span class="h-2 w-2 rounded-full bg-brand-success animate-pulse"></span>
-                <span class="text-slate-300 font-mono-custom">LangSmith Observability Tracing Active</span>
+            <div style="display:flex;align-items:center;gap:7px;background:#242428;border:1px solid #2a2a2e;padding:6px 12px;border-radius:8px">
+                <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;animation:pulse 2s infinite"></span>
+                <span class="font-mono-custom" style="font-size:0.68rem;color:#727781">LangSmith Active</span>
             </div>
-            <div class="text-xs text-slate-400 font-mono-custom">v1.3.0</div>
+            <span class="font-mono-custom" style="font-size:0.68rem;color:#4a5568">v1.3.0</span>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 flex overflow-hidden h-[calc(100vh-73px)]">
+    <!-- ═══ WORKSPACE ═══ -->
+    <div class="app-workspace">
 
-        <!-- Sidebar / Applications List -->
-        <section class="w-80 border-r border-brand-border bg-brand-bg/50 flex flex-col overflow-y-auto shrink-0 p-4">
-            <div class="mb-4">
-                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Loan Applications</h2>
-                <p class="text-xs text-slate-500">Select an application profile below:</p>
+        <!-- Sidebar -->
+        <aside class="sidebar-panel">
+            <div class="sidebar-header">
+                <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#727781;margin-bottom:4px">Loan Applications</div>
+                <div style="font-size:0.72rem;color:#4a5568">20 cases available</div>
+            </div>
+            <div id="applications-list" class="sidebar-list"></div>
+        </aside>
+
+        <!-- Main content panel -->
+        <main class="main-panel">
+
+            <!-- Welcome screen (shown when no app selected) -->
+            <div id="welcome-message" class="welcome-screen">
+                <div class="welcome-icon">
+                    <span class="material-symbols-outlined" style="font-size:38px;color:#9baabf">account_balance</span>
+                </div>
+                <h2 class="font-headline" style="font-size:1.4rem;font-weight:800;color:#e2e4e9;margin-bottom:10px">Select a Loan Application</h2>
+                <p style="color:#727781;max-width:380px;font-size:0.85rem;line-height:1.6">Choose a profile from the sidebar to inspect extracted documents, simulate the multi-agent underwriting pipeline, and record officer decisions.</p>
             </div>
 
-            <div id="applications-list" class="space-y-3 flex-1">
-                <!-- Dynamically populated -->
-            </div>
-        </section>
-
-        <!-- Main Display / Pipeline View -->
-        <section class="flex-1 flex flex-col overflow-y-auto p-6 bg-brand-bg/20">
-            <div id="welcome-message" class="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <span class="material-symbols-outlined text-brand-primary text-7xl mb-4 animate-bounce">account_balance</span>
-                <h2 class="text-2xl font-headline font-bold text-white mb-2">Select a Loan Application</h2>
-                <p class="text-slate-400 max-w-md">Choose a profile from the sidebar to inspect extracted documents, simulate the multi-agent underwriting decision flow, and process approvals.</p>
-            </div>
-
-            <div id="application-details" class="hidden space-y-6">
+            <div id="application-details" class="hidden main-content" style="padding-top:20px;padding-bottom:40px">
                 <!-- Profile Header -->
-                <div class="flex justify-between items-start bg-brand-card/35 border border-brand-border p-5 rounded-xl">
+                <div class="section-card" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
                     <div>
-                        <div class="flex items-center space-x-3 mb-1">
-                            <h2 id="app-name" class="text-2xl font-headline font-bold text-white">---</h2>
-                            <span id="app-id" class="font-mono-custom text-xs bg-brand-border px-2 py-0.5 rounded text-brand-primary">---</span>
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                            <h2 id="app-name" class="font-headline" style="font-size:1.3rem;font-weight:800;color:#e2e4e9">---</h2>
+                            <span id="app-id" class="font-mono-custom" style="font-size:0.68rem;background:#242428;border:1px solid #334155;padding:2px 8px;border-radius:5px;color:#9baabf">---</span>
                         </div>
-                        <p id="app-desc" class="text-sm text-slate-400">---</p>
+                        <p id="app-desc" style="font-size:0.8rem;color:#727781">---</p>
                     </div>
-                    <div class="text-right flex flex-col items-end gap-1">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Expected Recommendation</div>
-                        <div id="expected-recommendation" class="text-xs font-headline font-bold uppercase py-1 px-3 rounded-full border border-transparent">---</div>
+                    <div style="text-align:right">
+                        <div style="font-size:0.62rem;color:#727781;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Expected</div>
+                        <div id="expected-recommendation" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;padding:4px 12px;border-radius:20px">---</div>
                     </div>
                 </div>
 
                 <!-- Core Details Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Annual Income</div>
-                        <div id="detail-income" class="text-2xl font-headline font-extrabold text-white">---</div>
-                    </div>
-                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Monthly Debt</div>
-                        <div id="detail-debt" class="text-2xl font-headline font-extrabold text-white">---</div>
-                    </div>
-                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Loan Requested</div>
-                        <div id="detail-loan" class="text-2xl font-headline font-extrabold text-white">---</div>
-                    </div>
-                    <div class="bg-brand-card p-5 rounded-xl border border-brand-border flex flex-col gap-1 transition duration-200 hover:border-brand-primary/20">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold font-headline">Employment Stability</div>
-                        <div id="detail-employment" class="text-2xl font-headline font-extrabold text-white">---</div>
-                    </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+                    <div class="metric-card"><div class="metric-label">Annual Income</div><div id="detail-income" class="metric-value">---</div></div>
+                    <div class="metric-card"><div class="metric-label">Monthly Debt</div><div id="detail-debt" class="metric-value">---</div></div>
+                    <div class="metric-card"><div class="metric-label">Loan Requested</div><div id="detail-loan" class="metric-value">---</div></div>
+                    <div class="metric-card"><div class="metric-label">Employment</div><div id="detail-employment" class="metric-value">---</div></div>
                 </div>
 
                 <!-- Pre-assessment Rationale (always visible after case is loaded) -->
@@ -291,51 +615,49 @@
                 </div>
 
                 <!-- Pipeline Status Viz -->
-                <div class="bg-brand-card/45 border border-brand-border p-5 rounded-xl space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-headline font-semibold text-white">Orchestrated Agent Process Pipeline</h3>
-                        <button id="run-pipeline-btn" onclick="runPipeline()" class="flex items-center space-x-2 bg-brand-primary hover:bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition">
-                            <span class="material-symbols-outlined text-sm">play_arrow</span>
-                            <span>Run Multi-Agent Assessment</span>
+                <div class="section-card" style="margin-bottom:16px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div>
+                            <h3 class="font-headline" style="font-size:0.95rem;font-weight:700;color:#e2e4e9">Agent Pipeline</h3>
+                            <p style="font-size:0.72rem;color:#727781;margin-top:2px">Orchestrated multi-agent underwriting process</p>
+                        </div>
+                        <button id="run-pipeline-btn" onclick="runPipeline()" class="btn-run">
+                            <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
+                            <span>Run Assessment</span>
                         </button>
                     </div>
 
                     <!-- Visual Nodes -->
-                    <div class="grid grid-cols-5 gap-3 pt-2 relative">
-                        <!-- Node 1: Ingestion & KYC -->
-                        <div id="node-kyc" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
-                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">description</span>
-                            <div class="text-xs font-semibold text-white font-headline">KYC Agent</div>
-                            <div class="text-[10px] text-slate-400 mt-1">Parser & Identity</div>
-                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
+                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+                        <div id="node-kyc" class="pipeline-node">
+                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">description</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">KYC Agent</div>
+                            <div style="font-size:0.62rem;color:#727781;margin-top:2px">Parser & Identity</div>
+                            <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
-                        <!-- Node 2: Credit Score -->
-                        <div id="node-credit" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
-                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">monitoring</span>
-                            <div class="text-xs font-semibold text-white font-headline">Credit Agent</div>
-                            <div class="text-[10px] text-slate-400 mt-1">DTI & Scoring</div>
-                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
+                        <div id="node-credit" class="pipeline-node">
+                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">monitoring</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Credit Agent</div>
+                            <div style="font-size:0.62rem;color:#727781;margin-top:2px">DTI & Scoring</div>
+                            <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
-                        <!-- Node 3: Policy Check -->
-                        <div id="node-policy" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
-                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">gavel</span>
-                            <div class="text-xs font-semibold text-white font-headline">Policy Agent</div>
-                            <div class="text-[10px] text-slate-400 mt-1">RAG Compliance</div>
-                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
+                        <div id="node-policy" class="pipeline-node">
+                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">gavel</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Policy Agent</div>
+                            <div style="font-size:0.62rem;color:#727781;margin-top:2px">RAG Compliance</div>
+                            <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
-                        <!-- Node 4: Arbitrator -->
-                        <div id="node-arbitrator" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
-                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">balance</span>
-                            <div class="text-xs font-semibold text-white font-headline">Arbitrator</div>
-                            <div class="text-[10px] text-slate-400 mt-1">Weighted Vote</div>
-                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
+                        <div id="node-arbitrator" class="pipeline-node">
+                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">balance</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">Arbitrator</div>
+                            <div style="font-size:0.62rem;color:#727781;margin-top:2px">Weighted Vote</div>
+                            <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
-                        <!-- Node 5: Officer decision -->
-                        <div id="node-decision" class="pipeline-card p-4 rounded-xl flex flex-col items-center text-center">
-                            <span class="material-symbols-outlined text-slate-400 text-2xl mb-2">assignment_ind</span>
-                            <div class="text-xs font-semibold text-white font-headline">HITL Review</div>
-                            <div class="text-[10px] text-slate-400 mt-1">Manual Override</div>
-                            <span class="status-badge badge-idle mt-2 node-status">IDLE</span>
+                        <div id="node-decision" class="pipeline-node">
+                            <span class="material-symbols-outlined" style="font-size:22px;color:#727781;margin-bottom:8px">assignment_ind</span>
+                            <div class="font-headline" style="font-size:0.75rem;font-weight:700;color:#e2e4e9">HITL Review</div>
+                            <div style="font-size:0.62rem;color:#727781;margin-top:2px">Manual Override</div>
+                            <span class="status-badge badge-idle node-status" style="margin-top:8px">IDLE</span>
                         </div>
                     </div>
                 </div>
@@ -538,10 +860,11 @@
                         <div class="text-xs text-slate-400 uppercase font-semibold">Final Underwritten Application Status</div>
                         <div id="final-status-value" class="text-3xl font-headline font-bold uppercase text-brand-success">---</div>
                     </div>
-                </div>
-
             </div>
+
         </main>
+
+    </div><!-- end .app-workspace -->
 
     <script>
         let currentApp = null;
@@ -592,16 +915,14 @@
                 }
                               
                 const card = document.createElement('div');
-                card.className = `glass-card p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${isSelected ? 'active-card shadow-md shadow-blue-500/5' : ''}`;
+                card.className = `app-card${isSelected ? ' active' : ''}`;
                 card.onclick = () => selectApplication(app);
                 card.innerHTML = `
                     <div>
-                        <div class="text-sm font-semibold text-white">${app.applicant_data.name}</div>
-                        <div class="text-[10px] text-slate-400 font-mono-custom mt-1">${app.application_id}</div>
+                        <div style="font-size:0.82rem;font-weight:600;color:#e2e4e9">${app.applicant_data.name}</div>
+                        <div class="font-mono-custom" style="font-size:0.62rem;color:#4a5568;margin-top:3px">${app.application_id}</div>
                     </div>
-                    <div class="text-right">
-                        <span class="status-badge ${badgeClass}">${statusLabel}</span>
-                    </div>
+                    <span class="status-badge ${badgeClass}">${statusLabel}</span>
                 `;
                 listContainer.appendChild(card);
             });
@@ -626,11 +947,10 @@
             document.getElementById('app-desc').innerText = app.description || '';
             const expectedRec = app.expected_recommendation;
             const recEl = document.getElementById('expected-recommendation');
-            recEl.innerText = expectedRec.replace('_', ' ');
-            recEl.className = "text-xs font-headline font-bold uppercase py-1 px-3 rounded-full " + 
-                              (expectedRec === 'approve' ? 'bg-brand-success/8 text-brand-success border border-brand-success/15' 
-                               : expectedRec === 'deny' ? 'bg-brand-danger/8 text-brand-danger border border-brand-danger/15' 
-                               : 'bg-brand-warning/8 text-brand-warning border border-brand-warning/15');
+            recEl.innerText = expectedRec.replace('_', ' ').toUpperCase();
+            recEl.className = expectedRec === 'approve' ? 'rec-approve'
+                            : expectedRec === 'deny' ? 'rec-deny'
+                            : 'rec-review';
 
             // Details
             document.getElementById('detail-income').innerText = `$${app.applicant_data.income.toLocaleString()}`;
@@ -660,15 +980,18 @@
 
                     const fs = savedDecision.final_status;
                     if (fs === 'approved') {
-                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-success";
+                        finalStatusVal.className = "font-headline font-bold uppercase final-approved";
+                        finalStatusVal.style.cssText = "font-size:1.8rem;color:#34d399";
                         finalStatusVal.innerText = "APPROVED";
                         setNodeState('decision', 'passed');
                     } else if (fs === 'denied') {
-                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
+                        finalStatusVal.className = "font-headline font-bold uppercase final-denied";
+                        finalStatusVal.style.cssText = "font-size:1.8rem;color:#f87171";
                         finalStatusVal.innerText = "DENIED";
                         setNodeState('decision', 'failed');
                     } else {
-                        finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
+                        finalStatusVal.className = "font-headline font-bold uppercase final-review";
+                        finalStatusVal.style.cssText = "font-size:1.8rem;color:#c9a96e";
                         finalStatusVal.innerText = "UNDER MANUAL REVIEW";
                         setNodeState('decision', 'active');
                     }
@@ -777,7 +1100,7 @@
             const nodes = ['kyc', 'credit', 'policy', 'arbitrator', 'decision'];
             nodes.forEach(node => {
                 const el = document.getElementById(`node-${node}`);
-                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center";
+                el.className = 'pipeline-node';
                 const statusSpan = el.querySelector('.node-status');
                 statusSpan.innerText = 'IDLE';
                 statusSpan.className = 'status-badge badge-idle mt-2 node-status';
@@ -788,16 +1111,16 @@
             const el = document.getElementById(`node-${node}`);
             const statusSpan = el.querySelector('.node-status');
             if (state === 'active') {
-                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center scale-105 shadow-lg shadow-blue-500/10 border-brand-primary/45 bg-brand-card/85";
+                el.className = 'pipeline-node node-active';
                 statusSpan.innerText = 'PROCESSING...';
-                statusSpan.className = 'status-badge badge-review mt-2 node-status animate-pulse';
+                statusSpan.className = 'status-badge badge-review mt-2 node-status';
             } else if (state === 'passed') {
-                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center border-brand-success/45 bg-brand-success/5";
+                el.className = 'pipeline-node node-passed';
                 statusSpan.innerText = 'PASSED';
                 statusSpan.className = 'status-badge badge-approved mt-2 node-status';
             } else if (state === 'failed') {
-                el.className = "pipeline-card p-4 rounded-xl flex flex-col items-center text-center border-brand-danger/45 bg-brand-danger/5";
-                statusSpan.innerText = 'FAILED / REVIEW';
+                el.className = 'pipeline-node node-failed';
+                statusSpan.innerText = 'REVIEWED';
                 statusSpan.className = 'status-badge badge-denied mt-2 node-status';
             }
         }
@@ -1040,17 +1363,20 @@
                 
                 if (result.final_status === 'approved') {
                     appStatuses[currentApp.application_id] = 'approved';
-                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-success";
+                    finalStatusVal.className = "font-headline font-bold uppercase";
+                    finalStatusVal.style.cssText = "font-size:1.8rem;color:#34d399";
                     finalStatusVal.innerText = "APPROVED";
                     setNodeState('decision', 'passed');
                 } else if (result.final_status === 'denied') {
                     appStatuses[currentApp.application_id] = 'denied';
-                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-danger";
+                    finalStatusVal.className = "font-headline font-bold uppercase";
+                    finalStatusVal.style.cssText = "font-size:1.8rem;color:#f87171";
                     finalStatusVal.innerText = "DENIED";
                     setNodeState('decision', 'failed');
                 } else {
                     appStatuses[currentApp.application_id] = 'under_review';
-                    finalStatusVal.className = "text-3xl font-headline font-bold uppercase text-brand-warning";
+                    finalStatusVal.className = "font-headline font-bold uppercase";
+                    finalStatusVal.style.cssText = "font-size:1.8rem;color:#c9a96e";
                     finalStatusVal.innerText = "UNDER MANUAL REVIEW";
                     setNodeState('decision', 'active');
                 }
